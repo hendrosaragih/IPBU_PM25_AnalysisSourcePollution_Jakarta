@@ -1,0 +1,568 @@
+ Simulation Date (CCYYMMDD): 20251120
+ Simulation Time (HHMMSS.S): 054445.728
+ NOTICE metini: MODEL_ID not AWRF in data (kg,kt)           1           1
+ Setting DREC(KG,KT)%WVERT=.FALSE. to use default vertical interpolation!
+ Simulation Date (CCYYMMDD): 20251120
+ Simulation Time (HHMMSS.S): 054445.827
+ NOTICE metini: MODEL_ID not AWRF in data (kg,kt)           2           1
+ Setting DREC(KG,KT)%WVERT=.FALSE. to use default vertical interpolation!
+ Simulation Date (CCYYMMDD): 20251120
+ Simulation Time (HHMMSS.S): 054445.855
+ NOTICE metini: MODEL_ID not AWRF in data (kg,kt)           3           1
+ Setting DREC(KG,KT)%WVERT=.FALSE. to use default vertical interpolation!
+ Simulation Date (CCYYMMDD): 20251120
+ Simulation Time (HHMMSS.S): 054445.885
+ NOTICE metini: MODEL_ID not AWRF in data (kg,kt)           4           1
+ Setting DREC(KG,KT)%WVERT=.FALSE. to use default vertical interpolation!
+ 
+   KG   KT DATA  SIZE   NX   NY
+    1    1 GDAS 111.2  360  181
+    1    2 GDAS 111.2  360  181
+    1    3 GDAS 111.2  360  181
+    1    4 GDAS 111.2  360  181
+ 
+  NOTICE   main: number meteo grids and times -            1           4
+  
+ HYSPLIT
+ HYSPLIT version: hysplit.v5.4.2
+ Last Changed Date: 2025-05-14
+ ------------- Start Namelist configuration -------------------
+ Internal grid parameters (nlvl,aa,bb,cc):           24   30.00000    
+  -25.00000       5.000000    
+ &SETUP
+ INITD   =           0,
+ KHMAX   =        9999,
+ NUMPAR  =           0,
+ MAXPAR  =           0,
+ MAXDIM  =           0,
+ QCYCLE  =  0.0000000E+00,
+ P10F    =  0.0000000E+00,
+ KMIXD   =           0,
+ KMIX0   =           0,
+ FRME    =  0.0000000E+00,
+ FRMR    =  0.0000000E+00,
+ KRND    =           0,
+ DELT    =  0.0000000E+00,
+ KDEF    =           0,
+ TKERD   =  0.0000000E+00,
+ TKERN   =  0.0000000E+00,
+ NDUMP   =           0,
+ NCYCL   =           0,
+ TRATIO  =  0.7500000    ,
+ ISOT    =         -99,
+ MGMIN   =          10,
+ KMSL    =           0,
+ NSTR    =           0,
+ MHRS    =        9999,
+ NVER    =           0,
+ CPACK   = 99*0,
+ CMASS   =           0,
+ ICHEM   =           0,
+ EFILE   =                                                                                                                           
+                                                                                                                                     
+                                                                                                                                     
+                                                                                                                                     
+                                                                                                                                     
+                                                                                                                                     
+                                                                                                                                     
+                                                                                                               ,
+ VSCALE  =   100.0000    ,
+ VSCALES =   100.0000    ,
+ VSCALEU =   100.0000    ,
+ K10M    =           1,
+ VDIST   =                                                                                                                           
+                                                                                                                                     
+                                                                                                                                     
+                                                                                                                                     
+                                                                                                                                     
+                                                                                                                                     
+                                                                                                                                     
+                                                                                                               ,
+ KHINP   =           0,
+ PINBC   =                                                                                                                           
+                                                                                                                                     
+                                                                                                                                     
+                                                                                                                                     
+                                                                                                                                     
+                                                                                                                                     
+                                                                                                                                     
+                                                                                                               ,
+ TOUT    =          60,
+ TM_PRES =           1,
+ TM_TPOT =           1,
+ TM_TAMB =           1,
+ TM_RAIN =           1,
+ TM_MIXD =           1,
+ TM_TERR =           1,
+ HSCALE  =   10800.00    ,
+ TM_DSWF =           1,
+ TM_RELH =           1,
+ TM_SPHU =           0,
+ TM_MIXR =           0,
+ TM_UWND =           0,
+ TM_VWND =           0,
+ DXF     =   1.000000    ,
+ DYF     =   1.000000    ,
+ DZF     =  9.9999998E-03,
+ PINPF   =                                                                                                                           
+                                                                                                                                     
+                                                                                                                                     
+                                                                                                                                     
+                                                                                                                                     
+                                                                                                                                     
+                                                                                                                                     
+                                                                                                               ,
+ POUTF   =                                                                                                                           
+                                                                                                                                     
+                                                                                                                                     
+                                                                                                                                     
+                                                                                                                                     
+                                                                                                                                     
+                                                                                                                                     
+                                                                                                               ,
+ NINIT   =           0,
+ KAGL    =           1,
+ KPUFF   =           0,
+ KBLT    =           1,
+ KZMIX   =           0,
+ TVMIX   =   1.000000    ,
+ KBLS    =           1,
+ CONAGE  =           0,
+ KSPL    =           0,
+ FRHS    =  0.0000000E+00,
+ FRVS    =  0.0000000E+00,
+ FRTS    =  0.0000000E+00,
+ FRHMAX  =  0.0000000E+00,
+ SPLITF  =  0.0000000E+00,
+ MESSG   = MESSAGE                                                                                                                   
+                                                                                                                                     
+                                                                                                                                     
+                                                                                                                                     
+                                                                                                                                     
+                                                                                                                                     
+                                                                                                                                     
+                                                                                                               ,
+ NBPTYP  =           1,
+ RHB     =          80,
+ RHT     =          60,
+ OUTDT   =           0,
+ DECAY   =           1,
+ KWET    =           1,
+ KRAND   =           1,
+ CAPEMIN =  -1.000000    ,
+ TKEMIN  =  1.0000000E-03,
+ URATIO  =   5.873300    ,
+ WBWR    =  0.0000000E+00,
+ WBWF    =  0.0000000E+00,
+ WBBH    =  0.0000000E+00,
+ SEED    =           0,
+ GEMAGE  =           0,
+ VINIT   =           1,
+ VBUG    =  0.0000000E+00,
+ CMTFN   =                                                                                                                           
+                                                                                                                                     
+                                                                                                                                     
+                                                                                                                                     
+                                                                                                                                     
+                                                                                                                                     
+                                                                                                                                     
+                                                                                                               ,
+ RANDOM  =           1,
+ TLFRAC  =  0.1000000    ,
+ NTURB   =           0,
+ VEGHT   =  0.5000000    ,
+ ZICONTROLTF     =           0,
+ WINDERRTF       =           0,
+ IVMAX   =           5,
+ VARSIWANT       = TIMEINDXLONGLATIZAGL                                                                                              
+                                                                                                                                     
+                                                                                                                                     
+                       ,
+ IDSP    =           1,
+ WVERT   = T,
+ PLRISE  =           1,
+ AREA    =           0,
+ TERRFLG =           0,
+ TFMT    =           1
+ /
+ ------------- End Namelist configuration -------------------
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   80
+  NOTICE metpos: closed unit -            1           4        1003
+  NOTICE metpos: (mtime,ftime) -     65679840           0
+  NOTICE metpos: (mtime,ftime) -     65679660           0
+  NOTICE advpnt: (kg,nx,ny,nz) -     1   10   10   24
+  NOTICE sfcinp: reading ASCDATA.CFG
+  NOTICE sfcinp: ../bdyfiles/LANDUSE.ASC file not found
+  Using default value category 2 agricultural
+  NOTICE sfcinp: ../bdyfiles/ROUGLEN.ASC file not found
+  Using default value 0.20 m
+  NOTICE metgrd: (kg, xyr,xy1) -     1   10   10  103   80
+  NOTICE metinp: GDAS 1 2625   10   10  103   80 65679840 24 11 17  0
+  NOTICE metinp: GDAS 1 2461   10   10  103   80 65679660 24 11 16 21
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   80
+  NOTICE   main: Initial time step (min)          -60
+  NOTICE   main:     65679780           1           1         -60   107.7745    
+   84.77268      0.9959213    
+  NOTICE   main:     65679780           2           1         -60   107.7675    
+   84.78578      0.9795927    
+  NOTICE   main:     65679780           3           1         -60   107.7792    
+   84.80941      0.9595675    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   80
+  NOTICE   main:     65679720           1           1        -120   107.7927    
+   84.75662      0.9958958    
+  NOTICE   main:     65679720           2           1        -120   107.7732    
+   84.78699      0.9796565    
+  NOTICE   main:     65679720           3           1        -120   107.7900    
+   84.83186      0.9600039    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   80
+  NOTICE   main:     65679660           1           1        -180   107.8070    
+   84.74399      0.9958958    
+  NOTICE   main:     65679660           2           1        -180   107.7699    
+   84.79601      0.9801189    
+  NOTICE   main:     65679660           3           1        -180   107.7833    
+   84.86177      0.9611848    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   80
+  NOTICE metpos: (mtime,ftime) -     65679480    65679840
+  NOTICE metinp: GDAS 1 2297   10   10  103   80 65679480 24 11 16 18
+  NOTICE   main:     65679600           1           1        -240   107.8220    
+   84.73479      0.9958261    
+  NOTICE   main:     65679600           2           1        -240   107.7672    
+   84.80801      0.9806517    
+  NOTICE   main:     65679600           3           1        -240   107.7693    
+   84.89367      0.9624107    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   80
+  NOTICE   main:     65679540           1           1        -300   107.8424    
+   84.72935      0.9955811    
+  NOTICE   main:     65679540           2           1        -300   107.7750    
+   84.81861      0.9808652    
+  NOTICE   main:     65679540           3           1        -300   107.7615    
+   84.92014      0.9629363    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   80
+  NOTICE   main:     65679480           1           1        -360   107.8681    
+   84.72855      0.9951434    
+  NOTICE   main:     65679480           2           1        -360   107.7931    
+   84.82832      0.9807355    
+  NOTICE   main:     65679480           3           1        -360   107.7611    
+   84.94017      0.9627538    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   80
+  NOTICE metpos: (mtime,ftime) -     65679300    65679660
+  NOTICE metinp: GDAS 1 2133   10   10  103   80 65679300 24 11 16 15
+  NOTICE   main:     65679420           1           1        -420   107.8983    
+   84.73501      0.9944764    
+  NOTICE   main:     65679420           2           1        -420   107.8187    
+   84.84086      0.9802573    
+  NOTICE   main:     65679420           3           1        -420   107.7690    
+   84.95816      0.9623627    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   80
+  NOTICE   main:     65679360           1           1        -480   107.9326    
+   84.75157      0.9935240    
+  NOTICE   main:     65679360           2           1        -480   107.8486    
+   84.86000      0.9794180    
+  NOTICE   main:     65679360           3           1        -480   107.7861    
+   84.97796      0.9623041    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   80
+  NOTICE   main:     65679300           1           1        -540   107.9715    
+   84.78011      0.9922042    
+  NOTICE   main:     65679300           2           1        -540   107.8826    
+   84.88635      0.9781367    
+  NOTICE   main:     65679300           3           1        -540   107.8115    
+   84.99922      0.9624752    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   80
+  NOTICE metpos: (mtime,ftime) -     65679120    65679480
+  NOTICE metinp: GDAS 1 1969   10   10  103   80 65679120 24 11 16 12
+  NOTICE   main:     65679240           1           1        -600   108.0018    
+   84.82521      0.9909182    
+  NOTICE   main:     65679240           2           1        -600   107.9068    
+   84.92421      0.9768541    
+  NOTICE   main:     65679240           3           1        -600   107.8304    
+   85.02682      0.9626519    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   80
+  NOTICE   main:     65679180           1           1        -660   108.0094    
+   84.89079      0.9902088    
+  NOTICE   main:     65679180           2           1        -660   107.9066    
+   84.97792      0.9761975    
+  NOTICE   main:     65679180           3           1        -660   107.8297    
+   85.06525      0.9629045    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   80
+  NOTICE   main:     65679120           1           1        -720   107.9938    
+   84.97994      0.9900266    
+  NOTICE   main:     65679120           2           1        -720   107.8843    
+   85.04681      0.9760717    
+  NOTICE   main:     65679120           3           1        -720   107.8115    
+   85.11242      0.9632144    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   80
+  NOTICE metpos: (mtime,ftime) -     65678940    65679300
+  NOTICE metinp: GDAS 1 1805   10   10  103   80 65678940 24 11 16  9
+  NOTICE   main:     65679060           1           1        -780   107.9623    
+   85.08272      0.9897046    
+  NOTICE   main:     65679060           2           1        -780   107.8511    
+   85.12080      0.9755008    
+  NOTICE   main:     65679060           3           1        -780   107.7848    
+   85.16251      0.9628786    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   81
+  NOTICE   main:     65679000           1           1        -840   107.9244    
+   85.18244      0.9887173    
+  NOTICE   main:     65679000           2           1        -840   107.8134    
+   85.19007      0.9737681    
+  NOTICE   main:     65679000           3           1        -840   107.7572    
+   85.21064      0.9614076    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   81
+  NOTICE   main:     65678940           1           1        -900   107.8805    
+   85.27380      0.9870628    
+  NOTICE   main:     65678940           2           1        -900   107.7719    
+   85.25133      0.9710539    
+  NOTICE   main:     65678940           3           1        -900   107.7309    
+   85.25431      0.9590246    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   81
+  NOTICE metpos: (mtime,ftime) -     65678760    65679120
+  NOTICE metinp: GDAS 1 1641   10   10  103   80 65678760 24 11 16  6
+  NOTICE   main:     65678880           1           1        -960   107.8373    
+   85.35391      0.9848426    
+  NOTICE   main:     65678880           2           1        -960   107.7363    
+   85.30378      0.9678323    
+  NOTICE   main:     65678880           3           1        -960   107.7139    
+   85.29308      0.9562141    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   81
+  NOTICE   main:     65678820           1           1       -1020   107.8007    
+   85.42397      0.9823237    
+  NOTICE   main:     65678820           2           1       -1020   107.7148    
+   85.35119      0.9644604    
+  NOTICE   main:     65678820           3           1       -1020   107.7120    
+   85.33002      0.9533036    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   81
+  NOTICE   main:     65678760           1           1       -1080   107.7680    
+   85.48652      0.9796754    
+  NOTICE   main:     65678760           2           1       -1080   107.7064    
+   85.39655      0.9609514    
+  NOTICE   main:     65678760           3           1       -1080   107.7237    
+   85.36755      0.9503107    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   81
+  NOTICE metpos: (mtime,ftime) -     65678580    65678940
+  NOTICE metinp: GDAS 1 1477   10   10  103   80 65678580 24 11 16  3
+  NOTICE   main:     65678700           1           1       -1140   107.7419    
+   85.53548      0.9770258    
+  NOTICE   main:     65678700           2           1       -1140   107.7092    
+   85.43480      0.9576688    
+  NOTICE   main:     65678700           3           1       -1140   107.7449    
+   85.40160      0.9474797    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   81
+  NOTICE   main:     65678640           1           1       -1200   107.7260    
+   85.56576      0.9744536    
+  NOTICE   main:     65678640           2           1       -1200   107.7196    
+   85.46195      0.9548790    
+  NOTICE   main:     65678640           3           1       -1200   107.7710    
+   85.42816      0.9449648    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   81
+  NOTICE   main:     65678580           1           1       -1260   107.7197    
+   85.58117      0.9720310    
+  NOTICE   main:     65678580           2           1       -1260   107.7359    
+   85.48046      0.9525138    
+  NOTICE   main:     65678580           3           1       -1260   107.8011    
+   85.44878      0.9426728    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   81
+  NOTICE metpos: (mtime,ftime) -     65678400    65678760
+  NOTICE metinp: GDAS 1 1313   10   10  103   80 65678400 24 11 16  0
+  NOTICE   main:     65678520           1           1       -1320   107.7178    
+   85.58640      0.9701422    
+  NOTICE   main:     65678520           2           1       -1320   107.7561    
+   85.49177      0.9506864    
+  NOTICE   main:     65678520           3           1       -1320   107.8346    
+   85.46272      0.9408823    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   81
+  NOTICE   main:     65678460           1           1       -1380   107.7152    
+   85.58388      0.9690865    
+  NOTICE   main:     65678460           2           1       -1380   107.7784    
+   85.49644      0.9495330    
+  NOTICE   main:     65678460           3           1       -1380   107.8702    
+   85.46907      0.9399486    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   81
+  NOTICE   main:     65678400           1           1       -1440   107.7115    
+   85.57414      0.9688384    
+  NOTICE   main:     65678400           2           1       -1440   107.8019    
+   85.49498      0.9490671    
+  NOTICE   main:     65678400           3           1       -1440   107.9066    
+   85.46857      0.9399784    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   81
+  NOTICE metpos: (mtime,ftime) -     65678220    65678580
+  NOTICE metinp: GDAS 1 1149   10   10  103   80 65678220 24 11 15 21
+  NOTICE   main:     65678340           1           1       -1500   107.7008    
+   85.55455      0.9688723    
+  NOTICE   main:     65678340           2           1       -1500   107.8193    
+   85.48077      0.9490229    
+  NOTICE   main:     65678340           3           1       -1500   107.9366    
+   85.45700      0.9406313    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   81
+  NOTICE   main:     65678280           1           1       -1560   107.6788    
+   85.52231      0.9686032    
+  NOTICE   main:     65678280           2           1       -1560   107.8228    
+   85.44702      0.9490438    
+  NOTICE   main:     65678280           3           1       -1560   107.9524    
+   85.42896      0.9414720    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   81
+  NOTICE   main:     65678220           1           1       -1620   107.6453    
+   85.47659      0.9679880    
+  NOTICE   main:     65678220           2           1       -1620   107.8106    
+   85.39378      0.9489905    
+  NOTICE   main:     65678220           3           1       -1620   107.9515    
+   85.38388      0.9423701    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   81
+  NOTICE metpos: (mtime,ftime) -     65678040    65678400
+  NOTICE metinp: GDAS 1  985   10   10  103   80 65678040 24 11 15 18
+  NOTICE   main:     65678160           1           1       -1680   107.6079    
+   85.42033      0.9677591    
+  NOTICE   main:     65678160           2           1       -1680   107.7886    
+   85.33065      0.9493979    
+  NOTICE   main:     65678160           3           1       -1680   107.9395    
+   85.33038      0.9437255    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   81
+  NOTICE   main:     65678100           1           1       -1740   107.5726    
+   85.35909      0.9687042    
+  NOTICE   main:     65678100           2           1       -1740   107.7625    
+   85.26726      0.9509224    
+  NOTICE   main:     65678100           3           1       -1740   107.9223    
+   85.27686      0.9460571    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   81
+  NOTICE   main:     65678040           1           1       -1800   107.5374    
+   85.29255      0.9707636    
+  NOTICE   main:     65678040           2           1       -1800   107.7301    
+   85.20215      0.9535625    
+  NOTICE   main:     65678040           3           1       -1800   107.8979    
+   85.22260      0.9493544    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   81
+  NOTICE metpos: (mtime,ftime) -     65677860    65678220
+  NOTICE metinp: GDAS 1  821   10   10  103   80 65677860 24 11 15 15
+  NOTICE   main:     65677980           1           1       -1860   107.4983    
+   85.22707      0.9729852    
+  NOTICE   main:     65677980           2           1       -1860   107.6920    
+   85.13448      0.9562812    
+  NOTICE   main:     65677980           3           1       -1860   107.8695    
+   85.16541      0.9526870    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   81
+  NOTICE   main:     65677920           1           1       -1920   107.4509    
+   85.16770      0.9743950    
+  NOTICE   main:     65677920           2           1       -1920   107.6487    
+   85.06472      0.9579598    
+  NOTICE   main:     65677920           3           1       -1920   107.8406    
+   85.10334      0.9549920    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   81
+  NOTICE   main:     65677860           1           1       -1980   107.3919    
+   85.11384      0.9749113    
+  NOTICE   main:     65677860           2           1       -1980   107.5977    
+   84.99340      0.9584458    
+  NOTICE   main:     65677860           3           1       -1980   107.8083    
+   85.03581      0.9559814    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   80
+  NOTICE metpos: (mtime,ftime) -     65677680    65678040
+  NOTICE metinp: GDAS 1  657   10   10  103   80 65677680 24 11 15 12
+  NOTICE   main:     65677800           1           1       -2040   107.3369    
+   85.07069      0.9747952    
+  NOTICE   main:     65677800           2           1       -2040   107.5539    
+   84.93128      0.9583273    
+  NOTICE   main:     65677800           3           1       -2040   107.7796    
+   84.97562      0.9559130    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   80
+  NOTICE   main:     65677740           1           1       -2100   107.3074    
+   85.04628      0.9745237    
+  NOTICE   main:     65677740           2           1       -2100   107.5305    
+   84.88995      0.9582472    
+  NOTICE   main:     65677740           3           1       -2100   107.7638    
+   84.93634      0.9554261    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   80
+  NOTICE   main:     65677680           1           1       -2160   107.3072    
+   85.04235      0.9743134    
+  NOTICE   main:     65677680           2           1       -2160   107.5255    
+   84.86985      0.9582456    
+  NOTICE   main:     65677680           3           1       -2160   107.7628    
+   84.91788      0.9547455    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   80
+  NOTICE metpos: (mtime,ftime) -     65677500    65677860
+  NOTICE metinp: GDAS 1  493   10   10  103   80 65677500 24 11 15  9
+  NOTICE   main:     65677620           1           1       -2220   107.3253    
+   85.06254      0.9741321    
+  NOTICE   main:     65677620           2           1       -2220   107.5328    
+   84.86900      0.9584779    
+  NOTICE   main:     65677620           3           1       -2220   107.7734    
+   84.91427      0.9542066    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   80
+  NOTICE   main:     65677560           1           1       -2280   107.3517    
+   85.10889      0.9739382    
+  NOTICE   main:     65677560           2           1       -2280   107.5475    
+   84.88605      0.9590648    
+  NOTICE   main:     65677560           3           1       -2280   107.7931    
+   84.92023      0.9542090    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   80
+  NOTICE   main:     65677500           1           1       -2340   107.3890    
+   85.17949      0.9737016    
+  NOTICE   main:     65677500           2           1       -2340   107.5703    
+   84.92345      0.9598140    
+  NOTICE   main:     65677500           3           1       -2340   107.8225    
+   84.93686      0.9546886    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   80
+  NOTICE metpos: (mtime,ftime) -     65677320    65677680
+  NOTICE metinp: GDAS 1  329   10   10  103   80 65677320 24 11 15  6
+  NOTICE   main:     65677440           1           1       -2400   107.4358    
+   85.25691      0.9731384    
+  NOTICE   main:     65677440           2           1       -2400   107.6008    
+   84.96972      0.9599096    
+  NOTICE   main:     65677440           3           1       -2400   107.8601    
+   84.95550      0.9547712    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   80
+  NOTICE   main:     65677380           1           1       -2460   107.4882    
+   85.32418      0.9719446    
+  NOTICE   main:     65677380           2           1       -2460   107.6384    
+   85.00472      0.9587911    
+  NOTICE   main:     65677380           3           1       -2460   107.9037    
+   84.95901      0.9537867    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   80
+  NOTICE   main:     65677320           1           1       -2520   107.5468    
+   85.37927      0.9700441    
+  NOTICE   main:     65677320           2           1       -2520   107.6845    
+   85.02102      0.9565114    
+  NOTICE   main:     65677320           3           1       -2520   107.9529    
+   84.94194      0.9519855    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   80
+  NOTICE metpos: (mtime,ftime) -     65677140    65677500
+  NOTICE metinp: GDAS 1  165   10   10  103   80 65677140 24 11 15  3
+  NOTICE   main:     65677260           1           1       -2580   107.6168    
+   85.41755      0.9681336    
+  NOTICE   main:     65677260           2           1       -2580   107.7417    
+   85.01646      0.9541397    
+  NOTICE   main:     65677260           3           1       -2580   108.0096    
+   84.90930      0.9506285    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   80
+  NOTICE   main:     65677200           1           1       -2640   107.7011    
+   85.43906      0.9671537    
+  NOTICE   main:     65677200           2           1       -2640   107.8096    
+   84.99921      0.9528228    
+  NOTICE   main:     65677200           3           1       -2640   108.0743    
+   84.87636      0.9504082    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   80
+  NOTICE   main:     65677140           1           1       -2700   107.7989    
+   85.44742      0.9673612    
+  NOTICE   main:     65677140           2           1       -2700   107.8866    
+   84.97593      0.9526913    
+  NOTICE   main:     65677140           3           1       -2700   108.1464    
+   84.84684      0.9509773    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   80
+  NOTICE metpos: (mtime,ftime) -     65676960    65677320
+  NOTICE metinp: GDAS 1    1   10   10  103   80 65676960 24 11 15  0
+  NOTICE   main:     65677080           1           1       -2760   107.9001    
+   85.44437      0.9683065    
+  NOTICE   main:     65677080           2           1       -2760   107.9686    
+   84.95129      0.9532184    
+  NOTICE   main:     65677080           3           1       -2760   108.2227    
+   84.81747      0.9518574    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   80
+  NOTICE   main:     65677020           1           1       -2820   107.9957    
+   85.42889      0.9694061    
+  NOTICE   main:     65677020           2           1       -2820   108.0514    
+   84.92580      0.9538068    
+  NOTICE   main:     65677020           3           1       -2820   108.2999    
+   84.78297      0.9525747    
+  NOTICE advrng: (kg ,xyr,xy1) -  1   10   10  103   80
+  NOTICE   main:     65676960           1           1       -2880   108.0832    
+   85.40089      0.9705464    
+  NOTICE   main:     65676960           2           1       -2880   108.1335    
+   84.89700      0.9543687    
+  NOTICE   main:     65676960           3           1       -2880   108.3782    
+   84.73938      0.9529737    

@@ -1,0 +1,10 @@
+&SETUP
+KMSL=0,
+tm_tpot=1,
+tm_tamb=1,
+tm_rain=1,
+tm_mixd=1,
+tm_relh=1,
+tm_terr=1,
+tm_dswf=1,
+/ 

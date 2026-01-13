@@ -1,0 +1,21 @@
+
+DATA INTEGRATION SUMMARY
+Generated on: 2025-11-13 19:01:06
+Period: 2022-01-01 to 2024-12-31
+Stations: bundaran_hi, kelapa_gading, kebun_jeruk, jagakarsa, lubang_buaya
+Total days: 1096
+
+Files generated:
+- bundaran_hi.csv
+- kelapa_gading.csv
+- kebun_jeruk.csv
+- jagakarsa.csv
+- lubang_buaya.csv
+
+Data sources:
+- PM2.5: C:\Users\user\OneDrive\IPB\Thesis\02. Development\01. Data Praprocessing\05. Data Research\final_ispupm25.csv
+- AOD: C:\Users\user\OneDrive\IPB\Thesis\02. Development\01. Data Praprocessing\05. Data Research\final_aod.xlsx  
+- Meteorology: C:\Users\user\OneDrive\IPB\Thesis\02. Development\01. Data Praprocessing\05. Data Research\final_meteorology.csv
+
+Columns in each file:
+- datetime, ISPU_PM25, temp, dew, humidity, precip, windspeed, AOD, year, month, day

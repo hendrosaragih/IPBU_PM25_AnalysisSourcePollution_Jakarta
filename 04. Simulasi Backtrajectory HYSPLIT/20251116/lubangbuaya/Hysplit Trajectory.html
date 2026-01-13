@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<!-- saved from url=(0074)https://www.ready.noaa.gov/hypub/hqt.html?dir=/hypubout/HYSPLITtraj_175929 -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Hysplit Trajectory</title>
+
+
+<link rel="stylesheet" href="./Hysplit Trajectory_files/leaflet.css" integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA==" crossorigin="">
+
+<script src="./Hysplit Trajectory_files/leaflet.js.download" integrity="sha512-QVftwZFqvtRNi0ZyCtsznlKSWOStnDORoefr1enyq5mVL4tmKB3S/EnC3rRJcxCPavG10IcrVGSmPh6Qw5lwrg==" crossorigin=""></script>
+
+<script type="text/javascript" src="./Hysplit Trajectory_files/zip.js.download"></script>
+<link rel="stylesheet" href="./Hysplit Trajectory_files/css_styles.css">
+<script src="./Hysplit Trajectory_files/bundle.js.download"></script>
+<script type="text/javascript">
+
+var go = false;
+var map;
+var ndx;
+var ends
+var folder;
+var begins;
+var maxpoints = -999;
+var trajLayer;
+var redBall;
+var redMarker;
+var blueBall;
+var blueMarker;
+var greenBall;
+var greenMarker;
+var rMarker;
+var marker;
+var lat;
+var lng;
+var kml;
+var aRed = new Array();
+var redA = new Array();
+var aBlue = new Array();
+var blueA = new Array();
+var aGreen = new Array();
+var greenA = new Array();
+var lx = new Array();
+var bx = new Array();
+var printer;
+var dateInit;
+
+// check for IE browser (some functions do not work with IE)
+var ua = window.navigator.userAgent;
+var is_ie = /MSIE|Trident/.test(ua);
+
+
+function getData(xml) {
+	kml = new DOMParser().parseFromString(xml, 'text/xml');
+	folder = kml.getElementsByTagName("Folder");
+}
+
+function initMap(){
+
+	streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+	    maxZoom: 19,
+	    attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+	});
+
+	terrain = L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.{ext}', {
+	    attribution: 'Map tiles by <a href="https://stamen.com">Stamen Design</a>, <a href="https://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+	    subdomains: 'abcd',
+	    minZoom: 0,
+	    maxZoom: 15,
+	    ext: 'png'
+	});
+
+ 	map = L.map('map', {
+            wheelPxPerZoomLevel:120,
+            zoomDelta: 0.5,
+            zoomSnap: 0.5,
+            center: [38, -97],
+	    zoom: 4,
+            zoomControl:false,
+	    layers: [streets],
+            // Values are x and y here instead of lat and long elsewhere.
+            maxBounds: [
+              [-120, -220],
+              [120, 220]
+            ]
+
+      	});
+
+        L.control.zoom({
+               position:'bottomright'
+         }).addTo(map);
+
+        if (!is_ie) {
+          printer = L.easyPrint({
+            title: 'Print HYSPLIT Map',
+            sizeModes: ['Current', 'A4Landscape', 'A4Portrait'],
+            filename: 'HYSPLIT_Map',
+            exportOnly: true,
+            hideControlContainer: false,
+            position: 'topleft'
+          }).addTo(map);
+        }
+
+//      add the default basemap below other layers
+        var options = { attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> contributors' };
+        var basemap = L.tileLayer("https://{s}.tile.osm.org/{z}/{x}/{y}.png", options)
+        basemap.addTo(map);
+
+        map.on('mousemove',onMapMove);
+        kmzdir = processUser();
+        getKmz(kmzdir + '.kmz');
+	showTrack();
+}
+
+function onMapMove(e){
+   document.getElementById("latlng").textContent = "Lat = " + e.latlng.lat.toFixed(4) + "      Lng = " + e.latlng.lng.toFixed(4);
+}
+
+function getKmz(filename){
+      var plumeFile = new XMLHttpRequest();
+          plumeFile.open("GET", filename, true);
+          plumeFile.responseType = 'arraybuffer';
+          plumeFile.onreadystatechange = function() {
+            if (plumeFile.readyState === 4) {
+               if (plumeFile.status === 200 || plumeFile.status === 0) {
+                   readKmz(this.response,function(xml){
+                        plot(xml);
+                   });
+               }
+            }
+          }
+       plumeFile.send(null);
+}
+
+function readKmz(response,callback){
+   var responseArray = new Uint8Array(response);
+   var blobData = new Blob([responseArray], {type: 'application/zip'});
+   zip.createReader(new zip.BlobReader(blobData), function(reader) {
+      reader.getEntries(function(entries){
+        if(entries.length){
+          for(var i = 0; i < entries.length; i++){
+              if(entries[i].filename.indexOf(".kml") !=-1){
+                         entries[i].getData(new zip.TextWriter(),function(text){
+                           callback(text);
+                         });
+              }
+          }
+        }
+     }); //reader.
+   }); //zip.
+}
+
+function plot(xml){
+
+       getData(xml);
+       marker = L.icon({iconUrl: 'icon63.png', iconSize:[16,16]});
+       getCenter(kml);
+       iSetup(folder);
+       drawLine();
+       setTrack(folder);
+       drawMarkers(0);
+       L.control.scale().addTo(map);
+
+      var template =
+          '//gibs-{s}.earthdata.nasa.gov/wmts/epsg3857/best/' +
+          '{layer}/default/{time}/{tileMatrixSet}/{z}/{y}/{x}.jpg';
+
+      layer = L.tileLayer(template, {
+           layer: 'MODIS_Terra_CorrectedReflectance_TrueColor',
+           //layer: 'BlueMarble_NextGeneration',
+           tileMatrixSet: 'GoogleMapsCompatible_Level9',
+           maxZoom: 9,
+           time: [dateInit],
+           //tileSize: 256,
+           subdomains: 'abc',
+           noWrap: true,
+           continuousWorld: true,
+           // Prevent Leaflet from retrieving non-existent tiles on the
+           // borders.
+           bounds: [
+              [-85.0511287776, -179.999999975],
+              [85.0511287776, 179.999999975]
+           ],
+           attribution:
+            '<a href="https://wiki.earthdata.nasa.gov/display/GIBS">' +
+            'NASA EOSDIS GIBS</a>'
+      });
+
+      layer2 = L.tileLayer(template, {
+           layer: 'MODIS_Aqua_CorrectedReflectance_TrueColor',
+           tileMatrixSet: 'GoogleMapsCompatible_Level9',
+           maxZoom: 9,
+           time: [dateInit],
+           //tileSize: 256,
+           subdomains: 'abc',
+           noWrap: true,
+           continuousWorld: true,
+           // Prevent Leaflet from retrieving non-existent tiles on the
+           // borders.
+           bounds: [
+              [-85.0511287776, -179.999999975],
+              [85.0511287776, 179.999999975]
+           ],
+           attribution:
+            '<a href="https://wiki.earthdata.nasa.gov/display/GIBS">' +
+            'NASA EOSDIS GIBS</a>'
+      });
+
+      layer3 = L.tileLayer(template, {
+           layer: 'VIIRS_SNPP_CorrectedReflectance_TrueColor',
+           tileMatrixSet: 'GoogleMapsCompatible_Level9',
+           maxZoom: 9,
+           time: [dateInit],
+           //tileSize: 256,
+           subdomains: 'abc',
+           noWrap: true,
+           continuousWorld: true,
+           // Prevent Leaflet from retrieving non-existent tiles on the
+           // borders.
+           bounds: [
+              [-85.0511287776, -179.999999975],
+              [85.0511287776, 179.999999975]
+           ],
+           attribution:
+            '<a href="https://wiki.earthdata.nasa.gov/display/GIBS">' +
+            'NASA EOSDIS GIBS</a>'
+      });
+
+      layer4 = L.tileLayer(template, {
+           layer: 'BlueMarble_NextGeneration',
+           tileMatrixSet: 'GoogleMapsCompatible_Level8',
+           maxZoom: 8,
+           time: [dateInit],
+           //tileSize: 256,
+           subdomains: 'abc',
+           noWrap: true,
+           continuousWorld: true,
+           // Prevent Leaflet from retrieving non-existent tiles on the
+           // borders.
+           bounds: [
+              [-85.0511287776, -179.999999975],
+              [85.0511287776, 179.999999975]
+           ],
+           attribution:
+            '<a href="https://wiki.earthdata.nasa.gov/display/GIBS">' +
+            'NASA EOSDIS GIBS</a>'
+      });
+
+
+      // nowCOAST Web Mapping Service site:  https://nowcoast.noaa.gov/help/#!section=wms-usage
+      var nowCoastWMS =
+          'https://nowcoast.noaa.gov/arcgis/services/nowcoast/' +
+          '{layer}/MapServer/WMSServer?';
+
+      // NOAA nowCOAST 24 hr QPE precipitation
+      //var wms_server = "https://nowcoast.noaa.gov/arcgis/services/nowcoast/analysis_meteohydro_sfc_qpe_time/MapServer/WMSServer?";
+      var wms_options = { layer: 'analysis_meteohydro_sfc_qpe_time', layers: "9", format: "image/png32", transparent: true, opacity: 0.5, attribution: "<a href='https://nowcoast.noaa.gov/help/'>NOAA nowCOAST</a>"}
+      precipitation = L.tileLayer.wms(nowCoastWMS, wms_options);
+
+      // NOAA nowCOAST NEXRAD MRMS Reflectivity Mosaic
+      //var wms_server2 = "https://nowcoast.noaa.gov/arcgis/services/nowcoast/radar_meteo_imagery_nexrad_time/MapServer/WMSServer?";
+      var wms_options2 = { layer: 'radar_meteo_imagery_nexrad_time', layers: "1", format: "image/png32", transparent: true, opacity: 0.5, attribution: "<a href='https://nowcoast.noaa.gov/help/'>NOAA nowCOAST</a>"}
+      radar = L.tileLayer.wms(nowCoastWMS, wms_options2);
+
+      // NOAA nowCOAST GOES VISIBLE
+      //var wms_server3 = "https://nowcoast.noaa.gov/arcgis/services/nowcoast/sat_meteo_imagery_time/MapServer/WMSServer?";
+      var wms_options3 = { layer: 'sat_meteo_imagery_time', layers: "9", format: "image/png32", transparent: true, opacity: 0.8, attribution: "<a href='https://nowcoast.noaa.gov/help/'>NOAA nowCOAST</a>"}
+      goesvis = L.tileLayer.wms(nowCoastWMS, wms_options3);
+
+      // NOAA nowCOAST GOES INFRARED
+      //var wms_server4 = "https://nowcoast.noaa.gov/arcgis/services/nowcoast/sat_meteo_imagery_time/MapServer/WMSServer?";
+      var wms_options4 = { layer: 'sat_meteo_imagery_time', layers: "1", format: "image/png32", transparent: true, opacity: 0.6, attribution: "<a href='https://nowcoast.noaa.gov/help/'>NOAA nowCOAST</a>"}
+      goesir = L.tileLayer.wms(nowCoastWMS, wms_options4);
+
+      // NOAA nowCOAST GOES WATER VAPOR
+      //var wms_server5 = "https://nowcoast.noaa.gov/arcgis/services/nowcoast/sat_meteo_imagery_time/MapServer/WMSServer?";
+      var wms_options5 = { layer: 'sat_meteo_imagery_time', layers: "5", format: "image/png32", transparent: true, opacity: 0.6, attribution: "<a href='https://nowcoast.noaa.gov/help/'>NOAA nowCOAST</a>"}
+      goeswv = L.tileLayer.wms(nowCoastWMS, wms_options5);
+
+      // NOAA nowCOAST SURFACE IN-SITU OBSERVATIONS
+      //var wms_server6 = "https://nowcoast.noaa.gov/arcgis/services/nowcoast/obs_meteocean_insitu_sfc_time/MapServer/WMSServer?";
+      var wms_options6 = { layer: 'obs_meteocean_insitu_sfc_time', layers: "2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33", format: "image/png32", transparent: true, opacity: 1.0, attribution: "<a href='https://nowcoast.noaa.gov/help/'>NOAA nowCOAST</a>"}
+      var sfcobs = L.tileLayer.wms(nowCoastWMS, wms_options6);
+
+      // NOAA nowCOAST WATCHES
+      //var wms_server7 = "https://nowcoast.noaa.gov/arcgis/services/nowcoast/wwa_meteoceanhydro_shortduration_hazards_watches_time/MapServer/WMSServer?";
+      var wms_options7 = { layer: 'wwa_meteoceanhydro_shortduration_hazards_watches_time', layers: "0,1,2", format: "image/png32", transparent: true, opacity: 0.5, attribution: "<a href='https://nowcoast.noaa.gov/help/'>NOAA nowCOAST</a>"}
+      var watch = L.tileLayer.wms(nowCoastWMS, wms_options7);
+
+      // NOAA nowCOAST WARNINGS
+      //var wms_server8 = "https://nowcoast.noaa.gov/arcgis/services/nowcoast/wwa_meteoceanhydro_shortduration_hazards_warnings_time/MapServer/WMSServer?";
+      var wms_options8 = { layer: 'wwa_meteoceanhydro_shortduration_hazards_warnings_time', layers: "0,1,2,3,4,5,6,7", format: "image/png32", transparent: true, opacity: 0.5, attribution: "<a href='https://nowcoast.noaa.gov/help/'>NOAA nowCOAST</a>"}
+      var warn = L.tileLayer.wms(nowCoastWMS, wms_options8);
+
+
+      var qpeLegend = L.control({
+        position: 'topright'
+      });
+
+      qpeLegend.onAdd = function(map) {
+         //var src = 'https://nowcoast.noaa.gov/arcgis/services/nowcoast/analysis_meteohydro_sfc_qpe_time/MapServer/WmsServer?request=GetLegendGraphic&version=1.3.0&format=image/png32&layer=9'
+         var src = 'https://nowcoast.noaa.gov/images/legends/precipitation.png';
+         var div = L.DomUtil.create('div', 'info legend');
+         //div.style.width = '270px';
+         //div.style.height = '50px';
+         div.innerHTML += '<b>24 h QPE</b><br><img src="' + src + '" alt="legend">';
+         return div;
+      };
+
+      var radarLegend = L.control({
+        position: 'topright'
+      });
+
+      radarLegend.onAdd = function(map) {
+         //var src = 'https://nowcoast.noaa.gov/arcgis/services/nowcoast/radar_meteo_imagery_nexrad_time/MapServer/WmsServer?request=GetLegendGraphic&version=1.3.0&format=image/png32&layer=1';
+         //var src = 'https://nowcoast.noaa.gov/layerinfo?request=legend&service=radar_meteo_imagery_nexrad_time&layers=2'
+         var src = 'https://nowcoast.noaa.gov/images/legends/radar.png';
+         var div = L.DomUtil.create('div', 'info legend');
+         //div.style.width = '270px';
+         //div.style.height = '50px';
+         div.innerHTML += '<b>NEXRAD Radar</b><br><img src="' + src + '" alt="legend">';
+         return div;
+      };
+
+      //var radarTime = L.control({
+      //  position: 'topright'
+      //});
+
+      //radarTime.onAdd = function(map) {
+      //   var time_radar = 'https://nowcoast.noaa.gov/layerinfo?request=timestamps&service=radar_meteo_imagery_nexrad_time&layers=0&displaytime=now&format=plaintext';
+      //   var div = L.DomUtil.create('div', 'info time');
+      //   div.innerHTML += '<b>"' + time_radar + '"></b>';
+      //   return div;
+      //};
+
+      var goesvisLegend = L.control({
+        position: 'topright'
+      });
+
+      goesvisLegend.onAdd = function(map) {
+         var src = 'https://nowcoast.noaa.gov/arcgis/services/nowcoast/sat_meteo_imagery_time/MapServer/WmsServer?request=GetLegendGraphic&version=1.3.0&format=image/png32&layer=9';
+         var div = L.DomUtil.create('div', 'info legend');
+         //div.style.width = '270px';
+         //div.style.height = '50px';
+         div.innerHTML += '<b>GOES Visible</b><br><img src="' + src + '" alt="legend">';
+         return div;
+      };
+
+      var goesirLegend = L.control({
+        position: 'topright'
+      });
+
+      goesirLegend.onAdd = function(map) {
+         var src = 'https://nowcoast.noaa.gov/arcgis/services/nowcoast/sat_meteo_imagery_time/MapServer/WmsServer?request=GetLegendGraphic&version=1.3.0&format=image/png32&layer=1';
+         var div = L.DomUtil.create('div', 'info legend');
+         //div.style.width = '270px';
+         //div.style.height = '50px';
+         div.innerHTML += '<b>GOES IR</b><br><img src="' + src + '" alt="legend">';
+         return div;
+      };
+
+      var goeswvLegend = L.control({
+        position: 'topright'
+      });
+
+      goeswvLegend.onAdd = function(map) {
+         var src = 'https://nowcoast.noaa.gov/arcgis/services/nowcoast/sat_meteo_imagery_time/MapServer/WmsServer?request=GetLegendGraphic&version=1.3.0&format=image/png32&layer=5';
+         var div = L.DomUtil.create('div', 'info legend');
+         //div.style.width = '270px';
+         //div.style.height = '50px';
+         div.innerHTML += '<b>GOES WV</b><br><img src="' + src + '" alt="legend">';
+         return div;
+      };
+
+      var sfcobsLegend = L.control({
+        position: 'topright'
+      });
+
+      sfcobsLegend.onAdd = function(map) {
+          var src ='https://nowcoast.noaa.gov/images/legends/obs-meteocean-marinewx.png';
+         var div = L.DomUtil.create('div', 'info legend');
+         //div.style.width = '270px';
+         //div.style.height = '50px';
+         div.innerHTML += '<b>Surface Obs.</b><br><img src="' + src + '" alt="legend">';
+         return div;
+      };
+
+      var watchLegend = L.control({
+        position: 'topright'
+      });
+
+      watchLegend.onAdd = function(map) {
+         var src1 = 'https://nowcoast.noaa.gov/arcgis/services/nowcoast/wwa_meteoceanhydro_shortduration_hazards_watches_time/MapServer/WmsServer?request=GetLegendGraphic&version=1.3.0&format=image/png32&layer=0';
+         var src2 = 'https://nowcoast.noaa.gov/arcgis/services/nowcoast/wwa_meteoceanhydro_shortduration_hazards_watches_time/MapServer/WmsServer?request=GetLegendGraphic&version=1.3.0&format=image/png32&layer=1';
+         var src3 = 'https://nowcoast.noaa.gov/arcgis/services/nowcoast/wwa_meteoceanhydro_shortduration_hazards_watches_time/MapServer/WmsServer?request=GetLegendGraphic&version=1.3.0&format=image/png32&layer=2';
+         var div = L.DomUtil.create('div', 'info legend');
+         div.innerHTML += '<b>Watches</b><br><img src="' + src1 + '" alt="legend"><br><img src="' + src2 + '" alt="legend"><br><img src="' + src3 + '" alt="legend">';
+         return div;
+      };
+
+      var warnLegend = L.control({
+        position: 'topright'
+      });
+
+      warnLegend.onAdd = function(map) {
+         var src1 = 'https://nowcoast.noaa.gov/arcgis/services/nowcoast/wwa_meteoceanhydro_shortduration_hazards_warnings_time/MapServer/WmsServer?request=GetLegendGraphic&version=1.3.0&format=image/png32&layer=0';
+         var src2 = 'https://nowcoast.noaa.gov/arcgis/services/nowcoast/wwa_meteoceanhydro_shortduration_hazards_warnings_time/MapServer/WmsServer?request=GetLegendGraphic&version=1.3.0&format=image/png32&layer=1';
+         var src3 = 'https://nowcoast.noaa.gov/arcgis/services/nowcoast/wwa_meteoceanhydro_shortduration_hazards_warnings_time/MapServer/WmsServer?request=GetLegendGraphic&version=1.3.0&format=image/png32&layer=2';
+         var src4 = 'https://nowcoast.noaa.gov/arcgis/services/nowcoast/wwa_meteoceanhydro_shortduration_hazards_warnings_time/MapServer/WmsServer?request=GetLegendGraphic&version=1.3.0&format=image/png32&layer=3';
+         var src5 = 'https://nowcoast.noaa.gov/arcgis/services/nowcoast/wwa_meteoceanhydro_shortduration_hazards_warnings_time/MapServer/WmsServer?request=GetLegendGraphic&version=1.3.0&format=image/png32&layer=4';
+         var src6 = 'https://nowcoast.noaa.gov/arcgis/services/nowcoast/wwa_meteoceanhydro_shortduration_hazards_warnings_time/MapServer/WmsServer?request=GetLegendGraphic&version=1.3.0&format=image/png32&layer=5';
+         var src7 = 'https://nowcoast.noaa.gov/arcgis/services/nowcoast/wwa_meteoceanhydro_shortduration_hazards_warnings_time/MapServer/WmsServer?request=GetLegendGraphic&version=1.3.0&format=image/png32&layer=6';
+         var src8 = 'https://nowcoast.noaa.gov/arcgis/services/nowcoast/wwa_meteoceanhydro_shortduration_hazards_warnings_time/MapServer/WmsServer?request=GetLegendGraphic&version=1.3.0&format=image/png32&layer=7';
+         var div = L.DomUtil.create('div', 'info legend');
+         div.innerHTML += '<b>Warnings</b><br><img src="' + src1 + '" alt="legend"><br><img src="' + src2 + '" alt="legend"><br><img src="' + src3 + '" alt="legend"><br><img src="' + src4 + '" alt="legend"><br><img src="' + src5 + '" alt="legend"><br><img src="' + src6 + '" alt="legend"><br><img src="' + src7 + '" alt="legend"><br><img src="' + src8 + '" alt="legend">';
+         return div;
+      };
+
+      // display layers option
+      var baseLayers = {
+          'Terrain':terrain,
+          'Streets':streets,
+          ['MODIS Terra: '+dateInit]:layer,
+          ['MODIS Aqua: '+dateInit]:layer2,
+          ['VIIRS: '+dateInit]:layer3,
+          'Current 24 hr QPE': precipitation,
+          'Current NEXRAD Radar': radar,
+          'Current GOES Visible': goesvis,
+          'Current GOES IR': goesir,
+          'Current GOES WV': goeswv,
+          'Current Sfc Obs.': sfcobs,
+          'Current Weather Watches': watch,
+          'Current Weather Warnings': warn,
+          'Blue Marble':layer4
+      };
+
+      L.control.layers(baseLayers, null).addTo(map);
+
+      map.on('baselayerchange', function(eventLayer) {
+         if (eventLayer.name == 'MODIS Terra: '+dateInit) {
+            map.removeControl(qpeLegend);
+            map.removeControl(radarLegend);
+            map.removeControl(goesvisLegend);
+            map.removeControl(goesirLegend);
+            map.removeControl(goeswvLegend);
+            map.removeControl(sfcobsLegend);
+            map.removeControl(watchLegend);
+            map.removeControl(warnLegend);
+         } else if (eventLayer.name == 'MODIS Aqua: '+dateInit) {
+            map.removeControl(qpeLegend);
+            map.removeControl(radarLegend);
+            map.removeControl(goesvisLegend);
+            map.removeControl(goesirLegend);
+            map.removeControl(goeswvLegend);
+            map.removeControl(sfcobsLegend);
+            map.removeControl(watchLegend);
+            map.removeControl(warnLegend);
+         } else if (eventLayer.name == 'VIIRS: '+dateInit) {
+            map.removeControl(qpeLegend);
+            map.removeControl(radarLegend);
+            map.removeControl(goesvisLegend);
+            map.removeControl(goesirLegend);
+            map.removeControl(goeswvLegend);
+            map.removeControl(sfcobsLegend);
+            map.removeControl(watchLegend);
+            map.removeControl(warnLegend);
+         } else if (eventLayer.name == 'Blue Marble') {
+            map.removeControl(qpeLegend);
+            map.removeControl(radarLegend);
+            map.removeControl(goesvisLegend);
+            map.removeControl(goesirLegend);
+            map.removeControl(goeswvLegend);
+            map.removeControl(sfcobsLegend);
+            map.removeControl(watchLegend);
+            map.removeControl(warnLegend);
+         } else if (eventLayer.name == 'Terrain') {
+            map.removeControl(qpeLegend);
+            map.removeControl(radarLegend);
+            map.removeControl(goesvisLegend);
+            map.removeControl(goesirLegend);
+            map.removeControl(goeswvLegend);
+            map.removeControl(sfcobsLegend);
+            map.removeControl(watchLegend);
+            map.removeControl(warnLegend);
+         } else if (eventLayer.name == 'Streets') {
+            map.removeControl(qpeLegend);
+            map.removeControl(radarLegend);
+            map.removeControl(goesvisLegend);
+            map.removeControl(goesirLegend);
+            map.removeControl(goeswvLegend);
+            map.removeControl(sfcobsLegend);
+            map.removeControl(watchLegend);
+            map.removeControl(warnLegend);
+         } else if (eventLayer.name == 'Current 24 hr QPE') {
+            qpeLegend.addTo(this);
+            map.removeControl(radarLegend);
+            map.removeControl(goesvisLegend);
+            map.removeControl(goesirLegend);
+            map.removeControl(goeswvLegend);
+            map.removeControl(sfcobsLegend);
+            map.removeControl(watchLegend);
+            map.removeControl(warnLegend);
+         } else if (eventLayer.name == 'Current NEXRAD Radar') {
+            radarLegend.addTo(this);
+            //radarTime.addTo(this);
+            map.removeControl(qpeLegend);
+            map.removeControl(goesvisLegend);
+            map.removeControl(goesirLegend);
+            map.removeControl(goeswvLegend);
+            map.removeControl(sfcobsLegend);
+            map.removeControl(watchLegend);
+            map.removeControl(warnLegend);
+         } else if (eventLayer.name == 'Current GOES Visible') {
+            goesvisLegend.addTo(this);
+            map.removeControl(qpeLegend);
+            map.removeControl(radarLegend);
+            map.removeControl(goesirLegend);
+            map.removeControl(goeswvLegend);
+            map.removeControl(sfcobsLegend);
+            map.removeControl(watchLegend);
+            map.removeControl(warnLegend);
+         } else if (eventLayer.name == 'Current GOES IR') {
+            goesirLegend.addTo(this);
+            map.removeControl(qpeLegend);
+            map.removeControl(radarLegend);
+            map.removeControl(goesvisLegend);
+            map.removeControl(goeswvLegend);
+            map.removeControl(sfcobsLegend);
+            map.removeControl(watchLegend);
+            map.removeControl(warnLegend);
+         } else if (eventLayer.name == 'Current GOES WV') {
+            goeswvLegend.addTo(this);
+            map.removeControl(qpeLegend);
+            map.removeControl(radarLegend);
+            map.removeControl(goesvisLegend);
+            map.removeControl(goesirLegend);
+            map.removeControl(sfcobsLegend);
+            map.removeControl(watchLegend);
+            map.removeControl(warnLegend);
+         } else if (eventLayer.name == 'Current Sfc Obs.') {
+            sfcobsLegend.addTo(this);
+            map.removeControl(qpeLegend);
+            map.removeControl(radarLegend);
+            map.removeControl(goesvisLegend);
+            map.removeControl(goesirLegend);
+            map.removeControl(goeswvLegend);
+            map.removeControl(watchLegend);
+            map.removeControl(warnLegend);
+         } else if (eventLayer.name == 'Current Weather Watches') {
+            watchLegend.addTo(this);
+            map.removeControl(qpeLegend);
+            map.removeControl(radarLegend);
+            map.removeControl(goesvisLegend);
+            map.removeControl(goesirLegend);
+            map.removeControl(goeswvLegend);
+            map.removeControl(sfcobsLegend);
+            map.removeControl(warnLegend);
+         } else if (eventLayer.name == 'Current Weather Warnings') {
+            warnLegend.addTo(this);
+            map.removeControl(qpeLegend);
+            map.removeControl(radarLegend);
+            map.removeControl(goesvisLegend);
+            map.removeControl(goesirLegend);
+            map.removeControl(goeswvLegend);
+            map.removeControl(sfcobsLegend);
+            map.removeControl(watchLegend);
+         }
+      });
+
+}
+
+
+function drawLine(){
+
+     try {
+          for(var i = 0; i < trajLayer.length; i++) map.removeLayer(trajLayer[i]);
+          map.removeLayer(rMarker);
+     }
+     catch(err) {}
+
+        for(var j = 0; j < lx.length; j++){
+            trajLayer = new Array();
+            var line = folder[lx[j]].getElementsByTagName("LineString");
+            var style = folder[lx[j]].getElementsByTagName("styleUrl");
+            var coord = line[0].getElementsByTagName("coordinates");
+            var points = coord[0].textContent.split(String.fromCharCode(10));
+            if(points.length >= maxpoints){
+                 maxpoints = points.length;
+                 ndx = j;
+            }
+            for(var i = 1; i < points.length-1; i++){
+                var p = new L.LatLng(points[i].split(",")[1],points[i].split(",")[0]);
+                trajLayer.push(p);
+            }
+            var antiArray = isAntiMeridian(trajLayer);
+            var polyline = L.polyline(antiArray);
+            polyline.setStyle(getColor(style[0].textContent));
+            map.addLayer(polyline);
+            map.fitBounds(polyline.getBounds());
+		for(var k = 0; k < style.length; k++){
+			switch(style[k].textContent){
+				 case "#traj1":
+					  aRed.push(antiArray);
+					 break;
+				 case "#traj2":
+					  aBlue.push(antiArray);
+					 break;
+				 case "#traj3":
+					  aGreen.push(antiArray);
+					 break;
+			}
+		}
+       }
+	rMarker = L.marker([lat, lng], {icon: marker}).addTo(map);
+}
+
+function getCenter(kml){
+  var look = kml.getElementsByTagName("LookAt");
+  var y = look[0].getElementsByTagName("latitude");
+  var x = look[0].getElementsByTagName("longitude");
+  lat = Number(y[0].textContent);
+  lng = Number(x[0].textContent);
+  var gx = look[0].getElementsByTagName("gx:TimeStamp");
+  var dte = gx[0].getElementsByTagName("when");
+  dateInit = dte[0].textContent.substring(0,10);
+  //alert('dateInit = '+dateInit);
+}
+
+function drawMarkers(n){
+
+         if(n < maxpoints-3) var timeString = begins[n].textContent.replace("T", "  ");
+         else timeString = ends[n-1].textContent.replace("T", "  ");
+         document.getElementById("td").textContent = timeString;
+
+        for(var i = 0; i < redA.length; i++) map.removeLayer(redA[i]);
+        for(var i = 0; i < blueA.length; i++) map.removeLayer(blueA[i]);
+        for(var i = 0; i < greenA.length; i++) map.removeLayer(greenA[i]);
+
+        redA = new Array();
+        blueA = new Array();
+        greenA = new Array();
+
+        for(var i = 0; i < aRed.length; i++){
+           if(n < aRed[i].length){
+             redMarker = L.marker(aRed[i][n], {icon: redBall}).addTo(map);
+             redA.push(redMarker);
+           }
+        }
+
+        for(var i = 0; i < aBlue.length; i++){
+           if(n < aBlue[i].length){
+             blueMarker = L.marker(aBlue[i][n], {icon: blueBall}).addTo(map);
+             blueA.push(blueMarker);
+           }
+        }
+
+        for(var i = 0; i < aGreen.length; i++){
+           if(n < aGreen[i].length){
+             greenMarker = L.marker(aGreen[i][n], {icon: greenBall}).addTo(map);
+             greenA.push(greenMarker);
+           }
+        }
+
+}
+
+function isAntiMeridian(a){
+
+    var maxV = -999;
+
+    var returnTraj = new Array();
+    for(var i = 0; i < a.length; i++) if(a[i].lng >= maxV) maxV = a[i].lng;
+
+    if(maxV > 179){
+       for(var i = 0; i < a.length; i++){
+           if(a[i].lng > 0){
+              var trjLng = -180.0 - (180.0 - a[i].lng);
+              returnTraj.push(new L.LatLng(a[i].lat,trjLng));
+           }
+           else{returnTraj.push(new L.LatLng(a[i].lat,a[i].lng));}
+       }
+    }
+    else{return a;}
+
+    return returnTraj;
+}
+
+
+function iSetup(e){
+
+    for(var i = 3; i < e.length; i++){
+      try{var line = e[i].getElementsByTagName("LineString");
+          if(line[0].textContent != "") lx.push(i);
+       }
+       catch(err){bx.push(i)}
+    }
+}
+
+function setTrack(e){
+
+  redBall = L.icon({iconUrl:'redball.png', iconSize:[16,16]});
+  blueBall = L.icon({iconUrl:'blueball.png', iconSize:[16,16]});
+  greenBall = L.icon({iconUrl:'greenball.png', iconSize:[16,16]});
+
+  begins = e[bx[ndx]].getElementsByTagName("begin");
+  ends = e[bx[ndx]].getElementsByTagName("end");
+  document.getElementById("loop").max = maxpoints-3;
+
+}
+
+function getColor(styleUrl){
+      switch(styleUrl){
+         case "#traj1":
+             return{color:'#ff0000', weight:3};
+         break;
+         case "#traj2":
+             return{color:'#0000ff', weight:3};
+         break;
+         case "#traj3":
+             return{color:'#00ff00', weight:3};
+         break;
+      }
+}
+
+function showTrack(){
+
+   var ta = document.getElementById("ld");
+      if (ta.style.visibility == "hidden") {
+          ta.style.visibility = "visible";
+      } else {
+           ta.style.visibility = "hidden";
+      }
+}
+
+function floop(){
+
+  go = !go;
+  if(go){
+      document.getElementById("arrow").style.color = "#ff0000";
+      fInterval = setInterval(doloop,500);
+  }
+  else{
+      document.getElementById("arrow").style.color = "#26a0da";
+      clearInterval(fInterval);
+  }
+}
+
+function doloop(){
+
+   var l = document.getElementById("loop");
+   if(l.value == l.max) l.value = 0;
+   else l.value++;
+   slider();
+}
+
+function slider(){
+  drawMarkers(document.getElementById("loop").value)
+}
+
+function metaData(){
+var win = window.open('/hysplit_metadata.html', '_blank');
+win.focus();
+}
+
+function processUser(){
+    var parameters = location.search.substring(1).split("&");
+    var temp = parameters[0].split("=");
+    var dir = unescape(temp[1]);
+    return dir;
+}
+
+</script>
+<script id="_fed_an_ua_tag" async="" type="text/javascript" src="./Hysplit Trajectory_files/Universal-Federated-Analytics-Min.js.download"></script>
+<script type="text/javascript" src="./Hysplit Trajectory_files/js"></script></head>
+
+<body onload="initMap()" topmargin="0" leftmargin="0">
+<div style="position:relative; top: 0px; left: 0px; width:800px; height:500px;">
+   <div id="map" class="leaflet-container leaflet-touch leaflet-fade-anim leaflet-grab leaflet-touch-drag leaflet-touch-zoom" style="position: relative;" tabindex="0"><div class="leaflet-pane leaflet-map-pane" style="transform: translate3d(0px, 0px, 0px);"><div class="leaflet-pane leaflet-tile-pane"><div class="leaflet-layer " style="z-index: 2; opacity: 1;"><div class="leaflet-tile-container leaflet-zoom-animated" style="z-index: 17; transform: translate3d(327px, -56px, 0px) scale(0.176777);"></div><div class="leaflet-tile-container leaflet-zoom-animated" style="z-index: 19; transform: translate3d(0px, 0px, 0px) scale(0.707107);"><img alt="" role="presentation" src="./Hysplit Trajectory_files/133.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(359px, 204px, 0px); opacity: 1;"><img alt="" role="presentation" src="./Hysplit Trajectory_files/133(1).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(615px, 204px, 0px); opacity: 1;"><img alt="" role="presentation" src="./Hysplit Trajectory_files/132.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(359px, -52px, 0px); opacity: 1;"><img alt="" role="presentation" src="./Hysplit Trajectory_files/132(1).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(615px, -52px, 0px); opacity: 1;"><img alt="" role="presentation" src="./Hysplit Trajectory_files/134.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(359px, 460px, 0px); opacity: 1;"><img alt="" role="presentation" src="./Hysplit Trajectory_files/134(1).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(615px, 460px, 0px); opacity: 1;"><img alt="" role="presentation" src="./Hysplit Trajectory_files/133(2).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(103px, 204px, 0px); opacity: 1;"><img alt="" role="presentation" src="./Hysplit Trajectory_files/133(3).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(871px, 204px, 0px); opacity: 1;"><img alt="" role="presentation" src="./Hysplit Trajectory_files/132(2).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(103px, -52px, 0px); opacity: 1;"><img alt="" role="presentation" src="./Hysplit Trajectory_files/132(3).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(871px, -52px, 0px); opacity: 1;"><img alt="" role="presentation" src="./Hysplit Trajectory_files/134(2).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(103px, 460px, 0px); opacity: 1;"><img alt="" role="presentation" src="./Hysplit Trajectory_files/134(3).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(871px, 460px, 0px); opacity: 1;"><img alt="" role="presentation" src="./Hysplit Trajectory_files/133(4).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(-153px, 204px, 0px); opacity: 1;"><img alt="" role="presentation" src="./Hysplit Trajectory_files/133(5).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1127px, 204px, 0px); opacity: 1;"><img alt="" role="presentation" src="./Hysplit Trajectory_files/132(4).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(-153px, -52px, 0px); opacity: 1;"><img alt="" role="presentation" src="./Hysplit Trajectory_files/132(5).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1127px, -52px, 0px); opacity: 1;"><img alt="" role="presentation" src="./Hysplit Trajectory_files/134(4).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(-153px, 460px, 0px); opacity: 1;"><img alt="" role="presentation" src="./Hysplit Trajectory_files/134(5).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1127px, 460px, 0px); opacity: 1;"></div></div><div class="leaflet-layer " style="z-index: 1; opacity: 1;"><div class="leaflet-tile-container leaflet-zoom-animated" style="z-index: 16; transform: translate3d(327px, -56px, 0px) scale(0.176777);"></div><div class="leaflet-tile-container leaflet-zoom-animated" style="z-index: 18; transform: translate3d(0px, 0px, 0px) scale(0.707107);"><img alt="" role="presentation" src="./Hysplit Trajectory_files/133(6).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(359px, 204px, 0px); opacity: 1;"><img alt="" role="presentation" src="https://b.tile.osm.org/8/204/133.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(615px, 204px, 0px); opacity: 1;"><img alt="" role="presentation" src="https://c.tile.osm.org/8/203/132.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(359px, -52px, 0px); opacity: 1;"><img alt="" role="presentation" src="./Hysplit Trajectory_files/132(6).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(615px, -52px, 0px); opacity: 1;"><img alt="" role="presentation" src="./Hysplit Trajectory_files/134(6).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(359px, 460px, 0px); opacity: 1;"><img alt="" role="presentation" src="https://c.tile.osm.org/8/204/134.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(615px, 460px, 0px); opacity: 1;"><img alt="" role="presentation" src="./Hysplit Trajectory_files/133(7).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(103px, 204px, 0px); opacity: 1;"><img alt="" role="presentation" src="./Hysplit Trajectory_files/133(8).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(871px, 204px, 0px); opacity: 1;"><img alt="" role="presentation" src="https://b.tile.osm.org/8/202/132.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(103px, -52px, 0px); opacity: 1;"><img alt="" role="presentation" src="./Hysplit Trajectory_files/132(7).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(871px, -52px, 0px); opacity: 1;"><img alt="" role="presentation" src="./Hysplit Trajectory_files/134(7).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(103px, 460px, 0px); opacity: 1;"><img alt="" role="presentation" src="./Hysplit Trajectory_files/134(8).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(871px, 460px, 0px); opacity: 1;"><img alt="" role="presentation" src="./Hysplit Trajectory_files/133(9).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(-153px, 204px, 0px); opacity: 1;"><img alt="" role="presentation" src="./Hysplit Trajectory_files/133(10).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1127px, 204px, 0px); opacity: 1;"><img alt="" role="presentation" src="./Hysplit Trajectory_files/132(8).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(-153px, -52px, 0px); opacity: 1;"><img alt="" role="presentation" src="https://c.tile.osm.org/8/206/132.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1127px, -52px, 0px); opacity: 1;"><img alt="" role="presentation" src="./Hysplit Trajectory_files/134(9).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(-153px, 460px, 0px); opacity: 1;"><img alt="" role="presentation" src="https://b.tile.osm.org/8/206/134.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1127px, 460px, 0px); opacity: 1;"></div></div></div><div class="leaflet-pane leaflet-shadow-pane"></div><div class="leaflet-pane leaflet-overlay-pane"><svg pointer-events="none" class="leaflet-zoom-animated" width="960" height="541" viewBox="-80 -45 960 541" style="transform: translate3d(-80px, -45px, 0px);"><g><path class="leaflet-interactive" stroke="#ff0000" stroke-opacity="1" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M439 51L445 36L448 15L446 -9L440 -30L432 -45M413 -45L412 -43L418 -19L418 -8L416 -3L408 5L408 7L405 8"></path><path class="leaflet-interactive" stroke="#0000ff" stroke-opacity="1" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M439 51L441 40L439 31L432 24L423 19L411 16L399 19L388 28L380 41L379 53L383 64L412 108L440 165L450 182L462 198L492 229L511 246L532 264L578 298"></path><path class="leaflet-interactive" stroke="#00ff00" stroke-opacity="1" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M439 51L432 64L426 90L426 155L407 285L397 333L387 363L371 388L361 400"></path></g></svg></div><div class="leaflet-pane leaflet-marker-pane"><img src="./Hysplit Trajectory_files/icon63.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="https://www.ready.noaa.gov/hypub/redball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="https://www.ready.noaa.gov/hypub/redball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="https://www.ready.noaa.gov/hypub/redball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="https://www.ready.noaa.gov/hypub/redball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="https://www.ready.noaa.gov/hypub/redball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="https://www.ready.noaa.gov/hypub/redball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="https://www.ready.noaa.gov/hypub/redball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="https://www.ready.noaa.gov/hypub/redball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="https://www.ready.noaa.gov/hypub/redball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="https://www.ready.noaa.gov/hypub/redball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="https://www.ready.noaa.gov/hypub/redball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="https://www.ready.noaa.gov/hypub/redball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="https://www.ready.noaa.gov/hypub/redball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="https://www.ready.noaa.gov/hypub/redball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="https://www.ready.noaa.gov/hypub/redball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="https://www.ready.noaa.gov/hypub/redball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="https://www.ready.noaa.gov/hypub/redball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="https://www.ready.noaa.gov/hypub/redball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="https://www.ready.noaa.gov/hypub/redball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="https://www.ready.noaa.gov/hypub/redball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="https://www.ready.noaa.gov/hypub/redball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="https://www.ready.noaa.gov/hypub/redball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="https://www.ready.noaa.gov/hypub/redball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="https://www.ready.noaa.gov/hypub/redball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="https://www.ready.noaa.gov/hypub/redball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="https://www.ready.noaa.gov/hypub/redball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/blueball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/blueball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/blueball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/blueball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/blueball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/blueball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/blueball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/blueball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/blueball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/blueball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/blueball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/blueball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/blueball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/blueball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/blueball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/blueball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/blueball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/blueball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/blueball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/blueball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/blueball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/blueball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/blueball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/blueball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/blueball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/blueball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/greenball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/greenball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/greenball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/greenball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/greenball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/greenball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/greenball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/greenball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/greenball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/greenball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/greenball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/greenball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/greenball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/greenball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/greenball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/greenball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/greenball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/greenball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/greenball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/greenball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/greenball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/greenball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/greenball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/greenball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/greenball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"><img src="./Hysplit Trajectory_files/greenball.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -8px; margin-top: -8px; width: 16px; height: 16px; transform: translate3d(439px, 51px, 0px); z-index: 51;"></div><div class="leaflet-pane leaflet-tooltip-pane"></div><div class="leaflet-pane leaflet-popup-pane"></div><div class="leaflet-proxy leaflet-zoom-animated" style="transform: translate3d(36892.9px, 24156.2px, 0px) scale(90.5097);"></div></div><div class="leaflet-control-container"><div class="leaflet-top leaflet-left"><div class="leaflet-control-easyPrint leaflet-bar leaflet-control"><a class="leaflet-control-easyPrint-button-export" id="leafletEasyPrint" title="Print HYSPLIT Map"></a><ul class="easyPrintHolder"><li class="easyPrintSizeMode" title="Current Size"><a class="CurrentSize"></a></li><li class="easyPrintSizeMode" title="A4 Landscape"><a class="A4Landscape page"></a></li><li class="easyPrintSizeMode" title="A4 Portrait"><a class="A4Portrait page"></a></li></ul></div></div><div class="leaflet-top leaflet-right"><div class="leaflet-control-layers leaflet-control" aria-haspopup="true"><a class="leaflet-control-layers-toggle" href="https://www.ready.noaa.gov/hypub/hqt.html?dir=/hypubout/HYSPLITtraj_175929#" title="Layers"></a><section class="leaflet-control-layers-list"><div class="leaflet-control-layers-base"><label><div><input type="radio" class="leaflet-control-layers-selector" name="leaflet-base-layers"><span> Terrain</span></div></label><label><div><input type="radio" class="leaflet-control-layers-selector" name="leaflet-base-layers" checked="checked"><span> Streets</span></div></label><label><div><input type="radio" class="leaflet-control-layers-selector" name="leaflet-base-layers"><span> MODIS Terra: 2023-09-22</span></div></label><label><div><input type="radio" class="leaflet-control-layers-selector" name="leaflet-base-layers"><span> MODIS Aqua: 2023-09-22</span></div></label><label><div><input type="radio" class="leaflet-control-layers-selector" name="leaflet-base-layers"><span> VIIRS: 2023-09-22</span></div></label><label><div><input type="radio" class="leaflet-control-layers-selector" name="leaflet-base-layers"><span> Current 24 hr QPE</span></div></label><label><div><input type="radio" class="leaflet-control-layers-selector" name="leaflet-base-layers"><span> Current NEXRAD Radar</span></div></label><label><div><input type="radio" class="leaflet-control-layers-selector" name="leaflet-base-layers"><span> Current GOES Visible</span></div></label><label><div><input type="radio" class="leaflet-control-layers-selector" name="leaflet-base-layers"><span> Current GOES IR</span></div></label><label><div><input type="radio" class="leaflet-control-layers-selector" name="leaflet-base-layers"><span> Current GOES WV</span></div></label><label><div><input type="radio" class="leaflet-control-layers-selector" name="leaflet-base-layers"><span> Current Sfc Obs.</span></div></label><label><div><input type="radio" class="leaflet-control-layers-selector" name="leaflet-base-layers"><span> Current Weather Watches</span></div></label><label><div><input type="radio" class="leaflet-control-layers-selector" name="leaflet-base-layers"><span> Current Weather Warnings</span></div></label><label><div><input type="radio" class="leaflet-control-layers-selector" name="leaflet-base-layers"><span> Blue Marble</span></div></label></div><div class="leaflet-control-layers-separator" style="display: none;"></div><div class="leaflet-control-layers-overlays"></div></section></div></div><div class="leaflet-bottom leaflet-left"><div class="leaflet-control-scale leaflet-control"><div class="leaflet-control-scale-line" style="width: 58px;">50 km</div><div class="leaflet-control-scale-line" style="width: 94px;">50 mi</div></div></div><div class="leaflet-bottom leaflet-right"><div class="leaflet-control-zoom leaflet-bar leaflet-control"><a class="leaflet-control-zoom-in" href="https://www.ready.noaa.gov/hypub/hqt.html?dir=/hypubout/HYSPLITtraj_175929#" title="Zoom in" role="button" aria-label="Zoom in">+</a><a class="leaflet-control-zoom-out" href="https://www.ready.noaa.gov/hypub/hqt.html?dir=/hypubout/HYSPLITtraj_175929#" title="Zoom out" role="button" aria-label="Zoom out">−</a></div><div class="leaflet-control-attribution leaflet-control"><a href="http://leafletjs.com/" title="A JS library for interactive maps">Leaflet</a> | © <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> contributors</div></div></div></div>
+      <div id="ld" style="position: absolute; width: 350px; left: 110px; bottom: 35px; z-index: 1; visibility: visible;">
+         <span style="display:inline-block;width:250px">
+             <input type="range" min="0" max="24" value="0" class="slider" id="loop" onchange="slider()">
+         </span>
+         <span style="color:#26a0da;position:relative;top:3px;left:10px;display:inline-block;font-size:25px">
+             <a id="arrow" onmouseover="this.style.cursor=&#39;pointer&#39;" onclick="floop()">›</a>
+         </span>
+      </div>
+   <div class="topnav">
+      <label id="latlng" style="position:absolute; top:5px;left:100px; font-size: 14px;">Lat = -7.0247      Lng = 103.5039</label>
+   </div>
+   <div class="botnav">
+      <input class="cell" type="button" value="MetaData" style="position:relative; left:15px; font-size: 14px;" onclick="metaData()">
+      <label class="cell" id="td" style="position:relative; background-color:#26a0da; left:250px; font-size: 14px;visibility:visible">2023-09-22  12:00:00Z</label>
+   </div>
+</div>
+
+
+
+<style type="text/css">.leaflet-control-easyPrint-button { 
+      background-image: url(data:image/svg+xml;utf8;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iaXNvLTg4NTktMSI/Pgo8IS0tIEdlbmVyYXRvcjogQWRvYmUgSWxsdXN0cmF0b3IgMTYuMC4wLCBTVkcgRXhwb3J0IFBsdWctSW4gLiBTVkcgVmVyc2lvbjogNi4wMCBCdWlsZCAwKSAgLS0+CjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0iQ2FwYV8xIiB4PSIwcHgiIHk9IjBweCIgd2lkdGg9IjE2cHgiIGhlaWdodD0iMTZweCIgdmlld0JveD0iMCAwIDUxMiA1MTIiIHN0eWxlPSJlbmFibGUtYmFja2dyb3VuZDpuZXcgMCAwIDUxMiA1MTI7IiB4bWw6c3BhY2U9InByZXNlcnZlIj4KPGc+Cgk8cGF0aCBkPSJNMTI4LDMyaDI1NnY2NEgxMjhWMzJ6IE00ODAsMTI4SDMyYy0xNy42LDAtMzIsMTQuNC0zMiwzMnYxNjBjMCwxNy42LDE0LjM5OCwzMiwzMiwzMmg5NnYxMjhoMjU2VjM1Mmg5NiAgIGMxNy42LDAsMzItMTQuNCwzMi0zMlYxNjBDNTEyLDE0Mi40LDQ5Ny42LDEyOCw0ODAsMTI4eiBNMzUyLDQ0OEgxNjBWMjg4aDE5MlY0NDh6IE00ODcuMTk5LDE3NmMwLDEyLjgxMy0xMC4zODcsMjMuMi0yMy4xOTcsMjMuMiAgIGMtMTIuODEyLDAtMjMuMjAxLTEwLjM4Ny0yMy4yMDEtMjMuMnMxMC4zODktMjMuMiwyMy4xOTktMjMuMkM0NzYuODE0LDE1Mi44LDQ4Ny4xOTksMTYzLjE4Nyw0ODcuMTk5LDE3NnoiIGZpbGw9IiMwMDAwMDAiLz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8L3N2Zz4K);
+      background-size: 16px 16px; 
+      cursor: pointer; 
+    }
+    .leaflet-control-easyPrint-button-export { 
+      background-image: url(data:image/svg+xml;utf8;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iaXNvLTg4NTktMSI/Pgo8IS0tIEdlbmVyYXRvcjogQWRvYmUgSWxsdXN0cmF0b3IgMTYuMC4wLCBTVkcgRXhwb3J0IFBsdWctSW4gLiBTVkcgVmVyc2lvbjogNi4wMCBCdWlsZCAwKSAgLS0+CjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0iQ2FwYV8xIiB4PSIwcHgiIHk9IjBweCIgd2lkdGg9IjE2cHgiIGhlaWdodD0iMTZweCIgdmlld0JveD0iMCAwIDQzMy41IDQzMy41IiBzdHlsZT0iZW5hYmxlLWJhY2tncm91bmQ6bmV3IDAgMCA0MzMuNSA0MzMuNTsiIHhtbDpzcGFjZT0icHJlc2VydmUiPgo8Zz4KCTxnIGlkPSJmaWxlLWRvd25sb2FkIj4KCQk8cGF0aCBkPSJNMzk1LjI1LDE1M2gtMTAyVjBoLTE1M3YxNTNoLTEwMmwxNzguNSwxNzguNUwzOTUuMjUsMTUzeiBNMzguMjUsMzgyLjV2NTFoMzU3di01MUgzOC4yNXoiIGZpbGw9IiMwMDAwMDAiLz4KCTwvZz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8L3N2Zz4K);
+      background-size: 16px 16px; 
+      cursor: pointer; 
+    }
+    .easyPrintHolder a {
+      background-size: 16px 16px;
+      cursor: pointer;
+    }
+    .easyPrintHolder .CurrentSize{
+      background-image: url(data:image/svg+xml;utf8;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPCFET0NUWVBFIHN2ZyBQVUJMSUMgIi0vL1czQy8vRFREIFNWRyAxLjEvL0VOIiAiaHR0cDovL3d3dy53My5vcmcvR3JhcGhpY3MvU1ZHLzEuMS9EVEQvc3ZnMTEuZHRkIj4KPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB3aWR0aD0iMTZweCIgdmVyc2lvbj0iMS4xIiBoZWlnaHQ9IjE2cHgiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZW5hYmxlLWJhY2tncm91bmQ9Im5ldyAwIDAgNjQgNjQiPgogIDxnPgogICAgPGcgZmlsbD0iIzFEMUQxQiI+CiAgICAgIDxwYXRoIGQ9Ik0yNS4yNTUsMzUuOTA1TDQuMDE2LDU3LjE0NVY0Ni41OWMwLTEuMTA4LTAuODk3LTIuMDA4LTIuMDA4LTIuMDA4QzAuODk4LDQ0LjU4MiwwLDQ1LjQ4MSwwLDQ2LjU5djE1LjQwMiAgICBjMCwwLjI2MSwwLjA1MywwLjUyMSwwLjE1NSwwLjc2N2MwLjIwMywwLjQ5MiwwLjU5NCwwLjg4MiwxLjA4NiwxLjA4N0MxLjQ4Niw2My45NDcsMS43NDcsNjQsMi4wMDgsNjRoMTUuNDAzICAgIGMxLjEwOSwwLDIuMDA4LTAuODk4LDIuMDA4LTIuMDA4cy0wLjg5OC0yLjAwOC0yLjAwOC0yLjAwOEg2Ljg1NWwyMS4yMzgtMjEuMjRjMC43ODQtMC43ODQsMC43ODQtMi4wNTUsMC0yLjgzOSAgICBTMjYuMDM5LDM1LjEyMSwyNS4yNTUsMzUuOTA1eiIgZmlsbD0iIzAwMDAwMCIvPgogICAgICA8cGF0aCBkPSJtNjMuODQ1LDEuMjQxYy0wLjIwMy0wLjQ5MS0wLjU5NC0wLjg4Mi0xLjA4Ni0xLjA4Ny0wLjI0NS0wLjEwMS0wLjUwNi0wLjE1NC0wLjc2Ny0wLjE1NGgtMTUuNDAzYy0xLjEwOSwwLTIuMDA4LDAuODk4LTIuMDA4LDIuMDA4czAuODk4LDIuMDA4IDIuMDA4LDIuMDA4aDEwLjU1NmwtMjEuMjM4LDIxLjI0Yy0wLjc4NCwwLjc4NC0wLjc4NCwyLjA1NSAwLDIuODM5IDAuMzkyLDAuMzkyIDAuOTA2LDAuNTg5IDEuNDIsMC41ODlzMS4wMjctMC4xOTcgMS40MTktMC41ODlsMjEuMjM4LTIxLjI0djEwLjU1NWMwLDEuMTA4IDAuODk3LDIuMDA4IDIuMDA4LDIuMDA4IDEuMTA5LDAgMi4wMDgtMC44OTkgMi4wMDgtMi4wMDh2LTE1LjQwMmMwLTAuMjYxLTAuMDUzLTAuNTIyLTAuMTU1LTAuNzY3eiIgZmlsbD0iIzAwMDAwMCIvPgogICAgPC9nPgogIDwvZz4KPC9zdmc+Cg==)
+    }
+    .easyPrintHolder .page {
+      background-image: url(data:image/svg+xml;utf8;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iaXNvLTg4NTktMSI/Pgo8IS0tIEdlbmVyYXRvcjogQWRvYmUgSWxsdXN0cmF0b3IgMTguMS4xLCBTVkcgRXhwb3J0IFBsdWctSW4gLiBTVkcgVmVyc2lvbjogNi4wMCBCdWlsZCAwKSAgLS0+CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0iQ2FwYV8xIiB4PSIwcHgiIHk9IjBweCIgdmlld0JveD0iMCAwIDQ0NC44MzMgNDQ0LjgzMyIgc3R5bGU9ImVuYWJsZS1iYWNrZ3JvdW5kOm5ldyAwIDAgNDQ0LjgzMyA0NDQuODMzOyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSIgd2lkdGg9IjUxMnB4IiBoZWlnaHQ9IjUxMnB4Ij4KPGc+Cgk8Zz4KCQk8cGF0aCBkPSJNNTUuMjUsNDQ0LjgzM2gzMzQuMzMzYzkuMzUsMCwxNy03LjY1LDE3LTE3VjEzOS4xMTdjMC00LjgxNy0xLjk4My05LjM1LTUuMzgzLTEyLjQ2N0wyNjkuNzMzLDQuNTMzICAgIEMyNjYuNjE3LDEuNywyNjIuMzY3LDAsMjU4LjExNywwSDU1LjI1Yy05LjM1LDAtMTcsNy42NS0xNywxN3Y0MTAuODMzQzM4LjI1LDQzNy4xODMsNDUuOSw0NDQuODMzLDU1LjI1LDQ0NC44MzN6ICAgICBNMzcyLjU4MywxNDYuNDgzdjAuODVIMjU2LjQxN3YtMTA4LjhMMzcyLjU4MywxNDYuNDgzeiBNNzIuMjUsMzRoMTUwLjE2N3YxMzAuMzMzYzAsOS4zNSw3LjY1LDE3LDE3LDE3aDEzMy4xNjd2MjI5LjVINzIuMjVWMzR6ICAgICIgZmlsbD0iIzAwMDAwMCIvPgoJPC9nPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+Cjwvc3ZnPgo=);
+    }
+    .easyPrintHolder .A4Landscape { 
+      transform: rotate(-90deg);
+    }
+
+    .leaflet-control-easyPrint-button{
+      display: inline-block;
+    }
+    .easyPrintHolder{
+      margin-top:-31px;
+      margin-bottom: -5px;
+      margin-left: 30px;
+      padding-left: 0px;
+      display: none;
+    }
+
+    .easyPrintSizeMode {
+      display: inline-block;
+    }
+    .easyPrintHolder .easyPrintSizeMode a {
+      border-radius: 0px;
+    }
+
+    .easyPrintHolder .easyPrintSizeMode:last-child a{
+      border-top-right-radius: 2px;
+      border-bottom-right-radius: 2px;
+      margin-left: -1px;
+    }
+
+    .easyPrintPortrait:hover, .easyPrintLandscape:hover{
+      background-color: #757570;
+      cursor: pointer;
+    }</style></body></html>

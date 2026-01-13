@@ -1,0 +1,21 @@
+23 10 01 13		#STARTING TIME: YEAR MONTH DAY HOUR
+3			#NUMBER OF STARTING LOCATIONS
+-6.194660 106.823500 500	#STARTING 1: LATITUDE LONGITUDE HEIGHT (m-agl)
+-6.194660 106.823500 1000	#STARTING 1: LATITUDE LONGITUDE HEIGHT (m AGL)
+-6.194660 106.823500 1500	#STARTING 1: LATITUDE LONGITUDE HEIGHT (m AGL)
+-24			#TOTAL RUN TIME (backwards)
+0			#VERTICAL MOTION CALCULATION METHOD
+16500                #TOP OF MODEL DOMAIN (m-AGL)
+5                #NUMBER nextfile mfile OF INPUT DATA GRIDS
+/pub/archives/gdas1/
+gdas1.oct23.w1
+/pub/archives/gdas1/
+gdas1.sep23.w5
+/pub/archives/gdas1/
+gdas1.sep23.w4
+/pub/archives/gdas1/
+gdas1.sep23.w3
+/pub/archives/gdas1/
+gdas1.oct23.w2
+/pub/ready/hypub/
+tdump.175026

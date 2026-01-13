@@ -1,0 +1,11 @@
+DATETIME,LATITUDE,LONGITUDE,PRESSURE_MB,THETA_K,AIR_TEMP_K,RAINFALL_MM,MIXDEPTH_M,RELHUMID_PERCENT,TERR_MSL_M,SUN_FLUX,WIND_U_MS,WIND_V_MS,Location_Name,LandCover_Class,LandCover_Color
+2023-10-01 00:00:00,-6.195,106.824,100.0,987.2,299.2,298.0,0.0,315.2,79.4,126.9,24.6,,"Central Jakarta, Java",Unknown/No Data,Unknown
+2023-09-30 19:00:00,-6.286,107.153,128.2,972.0,299.6,297.1,0.0,145.9,73.1,226.3,0.0,,"Pasirgombong, West Java",Unknown/No Data,Unknown
+2023-09-30 14:00:00,-6.287,107.172,178.4,967.5,300.7,297.8,0.0,163.0,67.4,227.0,128.8,,"Simpangan, West Java",Unknown/No Data,Unknown
+2023-09-30 09:00:00,-5.937,107.15,188.3,987.9,300.5,299.5,0.0,413.6,60.1,0.0,701.8,,"Unknown Area, West Java",Unknown/No Data,Unknown
+2023-09-30 04:00:00,-5.688,107.475,450.2,962.5,300.5,297.3,0.0,475.2,69.8,0.0,698.0,,"Unknown Area, West Java",Unknown/No Data,Unknown
+2023-09-29 23:00:00,-6.258,108.087,774.6,908.0,301.9,293.6,0.0,394.6,60.1,188.8,22.6,,"Unknown Area, West Java",Unknown/No Data,Unknown
+2023-09-29 18:00:00,-6.807,108.424,1098.8,853.1,304.7,291.1,0.0,226.9,52.1,397.5,0.0,,"Pasawahan, Java",Unknown/No Data,Unknown
+2023-09-29 13:00:00,-7.231,108.674,1078.6,871.6,304.3,292.5,0.1,91.8,68.2,243.8,226.3,,"Palugon, Central Java",Unknown/No Data,Unknown
+2023-09-29 08:00:00,-7.87,109.382,434.5,960.5,299.6,296.1,0.0,616.9,73.7,21.0,726.0,,"Unknown Area, Central Java",Unknown/No Data,Unknown
+2023-09-29 03:00:00,-8.569,110.622,449.2,954.3,300.3,296.3,0.0,912.7,70.9,92.1,693.3,,Ocean/Remote,Unknown/No Data,Unknown

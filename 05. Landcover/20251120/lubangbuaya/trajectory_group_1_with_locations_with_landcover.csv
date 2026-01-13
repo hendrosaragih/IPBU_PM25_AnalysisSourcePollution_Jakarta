@@ -1,0 +1,11 @@
+DATETIME,LATITUDE,LONGITUDE,PRESSURE_MB,THETA_K,AIR_TEMP_K,RAINFALL_MM,MIXDEPTH_M,RELHUMID_PERCENT,TERR_MSL_M,SUN_FLUX,WIND_U_MS,WIND_V_MS,Location_Name,LandCover_Class,LandCover_Color
+2023-09-28 00:00:00,-6.289,106.909,100.0,978.2,299.5,297.5,0.0,226.3,75.4,207.9,24.0,,"East Jakarta, Java",Unknown/No Data,Unknown
+2023-09-27 19:00:00,-6.467,107.23,191.9,948.8,299.4,294.9,0.0,268.5,81.4,369.6,0.0,,"Desa Ciptasari, West Java",Unknown/No Data,Unknown
+2023-09-27 14:00:00,-6.789,107.665,410.5,899.3,302.1,293.0,0.0,221.2,76.8,624.5,127.0,,"Cikole, Java",Unknown/No Data,Unknown
+2023-09-27 09:00:00,-6.805,108.106,51.7,940.1,308.6,303.2,0.0,1520.0,40.4,576.8,726.8,,"Cipeles, Java",Unknown/No Data,Unknown
+2023-09-27 04:00:00,-6.624,108.717,0.0,991.6,309.4,308.5,0.0,1545.5,48.0,178.9,726.4,,"Unknown Area, West Java",Unknown/No Data,Unknown
+2023-09-26 23:00:00,-7.083,108.83,247.3,963.4,298.2,295.0,0.0,307.1,73.8,189.7,22.6,,"Blandongan, Central Java",Unknown/No Data,Unknown
+2023-09-26 18:00:00,-7.767,109.475,565.4,943.8,298.9,294.0,0.1,351.9,80.4,41.7,0.0,,"Karangbolong, Central Java",Unknown/No Data,Unknown
+2023-09-26 13:00:00,-8.573,110.631,312.4,967.0,298.3,295.5,0.0,476.6,80.4,92.6,253.5,,Ocean/Remote,Unknown/No Data,Unknown
+2023-09-26 08:00:00,-9.708,111.69,380.4,968.2,298.4,295.6,0.0,902.3,84.3,0.0,714.9,,Ocean/Remote,Unknown/No Data,Unknown
+2023-09-26 03:00:00,-10.425,112.597,402.5,968.7,298.1,295.4,0.0,879.5,84.2,0.0,658.9,,Ocean/Remote,Unknown/No Data,Unknown

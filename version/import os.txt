@@ -1,0 +1,195 @@
+import os
+import pandas as pd
+import numpy as np
+from datetime import datetime, time
+import glob
+import warnings
+
+# Suppress warnings
+warnings.filterwarnings('ignore')
+
+# Path configuration
+INPUT_PATH = r"C:\Users\User\Downloads\pynb-pm25\dataset"
+OUTPUT_PATH = r"C:\Users\User\Downloads\pynb-pm25\processed_data"
+os.makedirs(OUTPUT_PATH, exist_ok=True)
+
+def parse_filename(filename):
+    """Extract date from filename with various formats"""
+    # Try different delimiters and patterns
+    for delimiter in ['_', '-']:
+        parts = filename.split(delimiter)
+        if len(parts) >= 6:
+            try:
+                return datetime.strptime(f"{parts[3]}-{parts[4]}-{parts[5]}", "%Y-%m-%d").date()
+            except ValueError:
+                continue
+    return None
+
+def clean_column_names(df):
+    """Standardize column names"""
+    column_map = {}
+    for col in df.columns:
+        col_upper = str(col).strip().upper()
+        if 'PM10' in col_upper:
+            column_map[col] = 'ISPU_PM10'
+        elif 'PM2.5' in col_upper or 'PM25' in col_upper:
+            column_map[col] = 'ISPU_PM2_5'
+        elif 'SO2' in col_upper:
+            column_map[col] = 'ISPU_SO2'
+        elif 'CO' in col_upper:
+            column_map[col] = 'ISPU_CO'
+        elif 'O3' in col_upper:
+            column_map[col] = 'ISPU_O3'
+        elif 'NO2' in col_upper:
+            column_map[col] = 'ISPU_NO2'
+        elif 'CRITICAL' in col_upper and 'PARAMETER' in col_upper:
+            column_map[col] = 'CRITICAL_PARAMETER'
+        elif 'STATUS' in col_upper and 'OVERALL' not in col_upper:
+            column_map[col] = 'OVERALL_STATUS'
+        elif 'WAKTU' in col_upper:
+            column_map[col] = 'WAKTU'
+    return column_map
+
+def process_time_column(time_series):
+    """Convert various time formats to datetime.time"""
+    # Try common time formats
+    time_formats = [
+        '%H:%M:%S', '%H.%M.%S', '%H:%M', '%H.%M', 
+        '%I:%M %p', '%I.%M %p', '%H:%M:%S.%f'
+    ]
+    
+    for fmt in time_formats:
+        try:
+            return pd.to_datetime(time_series, format=fmt).dt.time
+        except:
+            continue
+    
+    # Fallback to coercive parsing
+    try:
+        return pd.to_datetime(time_series, errors='coerce').dt.time
+    except:
+        return None
+
+def process_single_file(filepath):
+    """Process a single Excel file"""
+    filename = os.path.basename(filepath)
+    file_date = parse_filename(filename)
+    
+    if file_date is None:
+        print(f"⚠️ Tidak dapat ekstrak tanggal dari nama file: {filename}")
+        return None
+
+    try:
+        # Read Excel file with multiple engine fallbacks
+        try:
+            df = pd.read_excel(filepath, engine='openpyxl')
+        except:
+            try:
+                df = pd.read_excel(filepath, engine='xlrd')
+            except:
+                print(f"⚠️ Gagal membaca file: {filename}")
+                return None
+
+        # Clean column names
+        column_map = clean_column_names(df)
+        df.rename(columns=column_map, inplace=True)
+        
+        # Process time column
+        if 'WAKTU' in df.columns:
+            df['WAKTU'] = process_time_column(df['WAKTU'])
+        else:
+            # Create default hourly time if no time column exists
+            df['WAKTU'] = [time(hour) for hour in range(24)]
+        
+        # Create full datetime column
+        df['DATETIME'] = pd.to_datetime(file_date.strftime('%Y-%m-%d') + ' ' + df['WAKTU'].astype(str))
+        
+        # Fill missing values with hourly averages
+        ispu_cols = [col for col in df.columns if col.startswith('ISPU_')]
+        for col in ispu_cols:
+            if pd.api.types.is_numeric_dtype(df[col]):
+                hourly_avg = df.groupby('WAKTU')[col].transform('mean')
+                df[col] = df[col].fillna(hourly_avg)
+        
+        return df
+    
+    except Exception as e:
+        print(f"❌ Error saat memproses {filename}: {str(e)}")
+        return None
+
+def create_daily_aggregation(hourly_df):
+    """Create daily aggregation from hourly data"""
+    if hourly_df.empty:
+        return pd.DataFrame()
+    
+    agg_rules = {
+        'ISPU_PM10': 'max',
+        'ISPU_PM2_5': 'max',
+        'ISPU_SO2': 'max', 
+        'ISPU_CO': 'max',
+        'ISPU_O3': 'max',
+        'ISPU_NO2': 'max'
+    }
+    
+    # Add non-numeric columns if they exist
+    if 'CRITICAL_PARAMETER' in hourly_df.columns:
+        agg_rules['CRITICAL_PARAMETER'] = lambda x: x.mode()[0] if not x.mode().empty else np.nan
+    if 'OVERALL_STATUS' in hourly_df.columns:
+        agg_rules['OVERALL_STATUS'] = lambda x: x.mode()[0] if not x.mode().empty else np.nan
+    
+    daily_df = hourly_df.groupby(hourly_df['DATETIME'].dt.date).agg(agg_rules)
+    daily_df.index = pd.to_datetime(daily_df.index)
+    daily_df.index.name = 'TANGGAL'
+    
+    return daily_df.reset_index()
+
+def main():
+    print("Memulai pemrosesan data ISPU...")
+    
+    # Find all Excel files
+    excel_files = glob.glob(os.path.join(INPUT_PATH, "*.xls*"))
+    if not excel_files:
+        print("Tidak ditemukan file Excel di folder input")
+        return
+    
+    print(f"Found {len(excel_files)} files to process")
+    
+    # Process all files
+    all_data = []
+    for file in excel_files:
+        processed_df = process_single_file(file)
+        if processed_df is not None:
+            all_data.append(processed_df)
+            print(f"✅ Berhasil memproses: {os.path.basename(file)}")
+    
+    if not all_data:
+        print("Tidak ada data yang berhasil diproses")
+        return
+    
+    # Combine all data
+    combined_hourly = pd.concat(all_data, ignore_index=True)
+    combined_hourly.sort_values('DATETIME', inplace=True)
+    
+    # Create daily aggregation
+    daily_agg = create_daily_aggregation(combined_hourly)
+    
+    # Save results
+    hourly_output = os.path.join(OUTPUT_PATH, "ispu_hourly_complete.csv")
+    daily_output = os.path.join(OUTPUT_PATH, "ispu_daily_complete.csv")
+    
+    combined_hourly.to_csv(hourly_output, index=False, encoding='utf-8-sig')
+    daily_agg.to_csv(daily_output, index=False, encoding='utf-8-sig')
+    
+    print("\n✅ Pemrosesan selesai!")
+    print(f"- Data per jam tersimpan di: {hourly_output}")
+    print(f"- Data harian tersimpan di: {daily_output}")
+    print(f"\nStatistik data:")
+    print(f"Jumlah record hourly: {len(combined_hourly)}")
+    print(f"Jumlah record daily: {len(daily_agg)}")
+    print("\nStruktur data hourly:")
+    print(combined_hourly.head())
+    print("\nStruktur data daily:")
+    print(daily_agg.head())
+
+if __name__ == "__main__":
+    main()

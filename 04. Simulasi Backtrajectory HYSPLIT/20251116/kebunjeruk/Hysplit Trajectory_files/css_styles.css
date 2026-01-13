@@ -1,0 +1,113 @@
+
+body {margin:0;}
+
+.leaflet-container {
+  cursor: pointer;
+}
+
+#map {
+    top:25px;
+    width: 800px;
+    height: 451px;
+    z-index:0;
+}
+.topnav {
+  overflow: hidden;
+  position:absolute;
+  background-color: #26a0da;
+  top: 0;
+  left: 0;
+  width: 800px;
+  color: white;
+  height: 25px;
+  z-index:2;
+}
+
+.botnav {
+    overflow: hidden;
+    position:absolute;
+    background-color: #26a0da;
+    width:100%;
+    bottom:0;
+}
+
+.pix {
+      border:none;
+      position:absolute;
+      top:25px;
+      left:0;
+      z-index:2;
+      transition: height 0.3s;
+}
+.cell {
+      background-color: #0080c1;
+      border: none;
+      color: white;
+      padding: 2px 2px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 9px;
+      margin: 2px 2px;
+      cursor: pointer;
+}
+.ringnav {
+  overflow: hidden;
+  position:absolute;
+  border: none;
+  background-color: #ffffff;
+  top: 25px;
+  left: 500px;
+  width: 230px;
+  color: white;
+  height: 0px;
+  z-index:1;
+  transition: height 0.3s;
+}
+
+.ro {
+      color: black;
+      font-weight:normal;
+      font-size: 12px;
+}
+
+.slider {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 5px;
+    border-radius: 5px;   
+    background: #0080c1;
+    outline: none;
+    opacity: 0.7;
+    padding-top: 1px;
+    padding-bottom: 1px;
+    -webkit-transition: .2s;
+    transition: opacity .2s;
+}
+
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%; 
+    background: #0080c1;
+    cursor: pointer;
+}
+
+.slider::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #0080c1;
+    cursor: pointer;
+}
+
+  .fullscreen-icon { background-image: url(icon-fullscreen.png); }
+  #theBody:-webkit-full-screen { width: 100% !important; height: 100% !important;  z-index:0 }
+  #theBody:-ms-fullscreen { width: 100% !important; height: 100% !important; z-index:0}
+  #theBody:full-screen { width: 100% !important; height: 100% !important; z-index:0}
+  #theBody:fullscreen { width: 100% !important; height: 100% !important; z-index:0}
+ .leaflet-pseudo-fullscreen { position: fixed !important; width: 100% !important; height: 100% !important; top: 0px !important; left: 0px !important; z-index:0}
+
+
